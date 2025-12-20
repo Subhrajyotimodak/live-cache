@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ProjectSandwich - Vanilla JS Core Example</title>
+        <style>
+            body {
+                font-family:
+                    ui-sans-serif,
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Helvetica,
+                    Arial,
+                    "Apple Color Emoji",
+                    "Segoe UI Emoji";
+                max-width: 980px;
+                margin: 50px auto;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                padding: 28px;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            }
+            h1 {
+                color: #222;
+                margin: 0 0 6px;
+                font-size: 26px;
+            }
+            .subtitle {
+                color: #666;
+                margin: 0 0 18px;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+            @media (max-width: 860px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .card {
+                border: 1px solid #eee;
+                border-radius: 10px;
+                padding: 14px;
+                background: #fafafa;
+            }
+            .card h2 {
+                margin: 0 0 10px;
+                font-size: 16px;
+                color: #333;
+            }
+            .input-group {
+                margin-bottom: 12px;
+            }
+            label {
+                display: block;
+                margin-bottom: 6px;
+                color: #444;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            input,
+            select,
+            textarea {
+                width: 100%;
+                padding: 10px;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+                box-sizing: border-box;
+                background: white;
+            }
+            input:focus,
+            select:focus,
+            textarea:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            .row {
+                display: flex;
+                gap: 10px;
+            }
+            .row > * {
+                flex: 1;
+            }
+            button {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 10px 14px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                cursor: pointer;
+                margin-right: 8px;
+                margin-top: 8px;
+                white-space: nowrap;
+            }
+            button.secondary {
+                background: #111827;
+            }
+            button.ghost {
+                background: transparent;
+                color: #111827;
+                border: 1px solid #d1d5db;
+            }
+            button:hover {
+                opacity: 0.92;
+            }
+            .hint {
+                color: #6b7280;
+                font-size: 12px;
+                line-height: 1.35;
+                margin-top: 8px;
+            }
+            .status {
+                margin-top: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #f3f4f6;
+                border-left: 4px solid #667eea;
+            }
+            .status strong {
+                display: block;
+                margin-bottom: 4px;
+                color: #111827;
+            }
+            .status p {
+                margin: 0;
+                color: #374151;
+                font-size: 13px;
+            }
+            pre {
+                margin: 12px 0 0;
+                padding: 12px;
+                background: #0b1020;
+                color: #e5e7eb;
+                border-radius: 10px;
+                overflow: auto;
+                font-size: 12.5px;
+                line-height: 1.4;
+            }
+            code {
+                font-family:
+                    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                    "Liberation Mono", "Courier New", monospace;
+            }
+            .pill {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 999px;
+                background: #eef2ff;
+                color: #3730a3;
+                font-size: 12px;
+                font-weight: 600;
+                margin-left: 8px;
+            }
+            .danger {
+                border-left-color: #ef4444;
+                background: #fef2f2;
+            }
+            .danger p {
+                color: #991b1b;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>ProjectSandwich <span class="pill">Core APIs</span></h1>
+            <p class="subtitle">
+                Vanilla JavaScript example using core primitives via the UMD
+                build (<code>ProjectSandwich</code> global). Logic is split into
+                separate JS files loaded in order.
+            </p>
+
+            <div id="libStatus" class="status" style="display: none"></div>
+
+            <div class="grid">
+                <div class="card">
+                    <h2>1) Create / Insert</h2>
+
+                    <div class="row">
+                        <div class="input-group">
+                            <label for="usernameInput">username</label>
+                            <input
+                                id="usernameInput"
+                                type="text"
+                                value="alice"
+                                placeholder="e.g. alice"
+                            />
+                        </div>
+
+                        <div class="input-group">
+                            <label for="roleInput">role</label>
+                            <select id="roleInput">
+                                <option value="admin">admin</option>
+                                <option value="member" selected>member</option>
+                                <option value="guest">guest</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-group">
+                            <label for="activeInput">active</label>
+                            <select id="activeInput">
+                                <option value="true" selected>true</option>
+                                <option value="false">false</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="seedCount">seed count</label>
+                            <input
+                                id="seedCount"
+                                type="number"
+                                min="0"
+                                value="3"
+                            />
+                        </div>
+                    </div>
+
+                    <button id="insertBtn">Insert / Upsert user</button>
+                    <button id="seedBtn" class="ghost">
+                        Seed sample users
+                    </button>
+
+                    <p class="hint">
+                        Uses a <code>UserController</code> registered in the
+                        default ObjectStore, and writes through the controller
+                        (publish/subscribe friendly).
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h2>2) Query / Update / Delete</h2>
+
+                    <div class="input-group">
+                        <label for="idInput"
+                            >_id (for findOne / update / delete)</label
+                        >
+                        <input
+                            id="idInput"
+                            type="text"
+                            placeholder="Paste a document _id"
+                        />
+                    </div>
+
+                    <div class="row">
+                        <button id="findByIdBtn">Find by _id</button>
+                        <button id="deleteByIdBtn" class="secondary">
+                            Delete by _id
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-group">
+                            <label for="findUsername">Find by username</label>
+                            <input
+                                id="findUsername"
+                                type="text"
+                                value="alice"
+                                placeholder="e.g. alice"
+                            />
+                        </div>
+                        <div class="input-group">
+                            <label for="findRole">Find by role</label>
+                            <select id="findRole">
+                                <option value="">(any)</option>
+                                <option value="admin">admin</option>
+                                <option value="member" selected>member</option>
+                                <option value="guest">guest</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="findManyBtn">Find (Collection.find)</button>
+
+                    <div class="row">
+                        <button id="updateByIdBtn">Update by _id</button>
+                        <button id="updateByCondBtn" class="ghost">
+                            Update by conditions
+                        </button>
+                    </div>
+
+                    <p class="hint">
+                        Controller-driven updates publish changes. Deletes are
+                        performed on the underlying <code>Collection</code>.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h2>3) Serialize / Hydrate</h2>
+
+                    <div class="row">
+                        <button id="serializeBtn">
+                            Serialize (Collection.serialize)
+                        </button>
+                        <button id="dehydrateBtn" class="ghost">
+                            Dehydrate (alias)
+                        </button>
+                    </div>
+
+                    <div class="input-group" style="margin-top: 10px">
+                        <label for="hydrateInput">Serialized JSON</label>
+                        <textarea
+                            id="hydrateInput"
+                            rows="6"
+                            placeholder="Paste serialized JSON here"
+                        ></textarea>
+                    </div>
+
+                    <button id="hydrateBtn" class="secondary">
+                        Hydrate (Collection.hydrate)
+                    </button>
+
+                    <p class="hint">
+                        Hydration replaces the in-memory state of the
+                        collection.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h2>Output</h2>
+
+                    <div class="status">
+                        <strong>Current collection:</strong>
+                        <p>
+                            Name: <code id="collectionName"></code> • Documents:
+                            <code id="docCount"></code>
+                        </p>
+                    </div>
+
+                    <pre><code id="output"></code></pre>
+
+                    <div class="row">
+                        <button id="clearOutputBtn" class="ghost">
+                            Clear output
+                        </button>
+                        <button id="dumpAllBtn">Dump all docs</button>
+                    </div>
+
+                    <p class="hint">
+                        Tip: When you insert/upsert a user, the demo will try to
+                        keep the <code>_id</code> field handy for follow-up
+                        actions.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load library (UMD => window.ProjectSandwich) -->
+        <script src="../../dist/index.js"></script>
+
+        <!-- Load example scripts in order (no modules) -->
+        <script src="./js/logger.js"></script>
+        <script src="./js/dom.js"></script>
+        <script src="./js/state.js"></script>
+        <script src="./js/userController.js"></script>
+        <script src="./js/app.js"></script>
+    </body>
+</html>
