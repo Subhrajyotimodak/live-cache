@@ -21,7 +21,7 @@ npm install live-cache
 Or use it directly in the browser via UMD build:
 
 ```html
-<script src="path/to/dist/index.js"></script>
+<script src="path/to/dist/index.umd.js"></script>
 <script>
   const { Collection } = LiveCache;
   const users = new Collection("users");
@@ -94,7 +94,7 @@ todos.hydrate(savedData);
 ### Browser (UMD)
 
 ```html
-<script src="node_modules/live-cache/dist/index.js"></script>
+<script src="node_modules/live-cache/dist/index.umd.js"></script>
 <script>
   const { Collection } = LiveCache;
 
@@ -473,7 +473,11 @@ const rows = useJoinController({
 
 For full details, see the TSDoc on the exported APIs.
 
-- **Core**: `Collection`, `Document`, `Controller`, `ObjectStore`, `StorageManager`, `DefaultStorageManager`, `join`\n+- **Storage managers**: `LocalStorageStorageManager`, `IndexDbStorageManager`\n+- **React**: `ContextProvider`, `useRegister`, `useController`, `useJoinController`\n\n## Development
+- **Core**: `Collection`, `Document`, `Controller`, `ObjectStore`, `StorageManager`, `DefaultStorageManager`, `join`
+- **Storage managers**: `LocalStorageStorageManager`, `IndexDbStorageManager`
+- **React**: `ContextProvider`, `useRegister`, `useController`, `useJoinController`
+
+## Development
 
 ```bash
 npm install

@@ -1,8 +1,12 @@
-import typescript from "@rollup/plugin-typescript";
-import resolve from "@rollup/plugin-node-resolve";
-import commonjs from "@rollup/plugin-commonjs";
+const typescriptMod = require("@rollup/plugin-typescript");
+const resolveMod = require("@rollup/plugin-node-resolve");
+const commonjsMod = require("@rollup/plugin-commonjs");
 
-export default {
+const typescript = typescriptMod.default ?? typescriptMod;
+const nodeResolve = resolveMod.nodeResolve ?? resolveMod.default ?? resolveMod;
+const commonjs = commonjsMod.default ?? commonjsMod;
+
+module.exports = {
   input: "src/index.ts",
   external: ["react"],
   output: [
@@ -10,6 +14,7 @@ export default {
       file: "dist/index.umd.js",
       format: "umd",
       name: "LiveCache",
+      exports: "named",
       sourcemap: true,
       globals: {
         react: "React",
@@ -28,7 +33,7 @@ export default {
     },
   ],
   plugins: [
-    resolve(),
+    nodeResolve(),
     commonjs(),
     typescript({
       tsconfig: "./tsconfig.json",

@@ -7,7 +7,7 @@
  * - Drive the UI using the controller's underlying `collection`
  *
  * Assumptions:
- * - `../../dist/index.js` is loaded first (UMD => `window.LiveCache`)
+ * - `../../dist/index.umd.js` is loaded first (UMD => `window.LiveCache`)
  * - `js/userController.js` is loaded before this file and registers "User"
  * - index.html contains the required element IDs referenced below
  */
@@ -66,7 +66,7 @@
       showLibStatus(
         "danger",
         "Library not found",
-        "The UMD bundle did not load, so `window.LiveCache` is undefined. Build the project to generate `dist/index.js`, then reload this page.",
+        "The UMD bundle did not load, so `window.LiveCache` is undefined. Build the project to generate `dist/index.umd.js`, then reload this page.",
       );
       return null;
     }

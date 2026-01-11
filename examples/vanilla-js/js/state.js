@@ -36,17 +36,17 @@
     const Lib = global.LiveCache;
     if (!Lib) {
       throw new Error(
-        "LiveCache global not found. Ensure ../../dist/index.js is loaded before state.js",
+        "LiveCache global not found. Ensure ../../dist/index.umd.js is loaded before state.js"
       );
     }
     if (typeof Lib.getDefaultObjectStore !== "function") {
       throw new Error(
-        "LiveCache.getDefaultObjectStore is missing. Ensure it is exported from src/index.ts and included in the UMD build.",
+        "LiveCache.getDefaultObjectStore is missing. Ensure it is exported from src/index.ts and included in the UMD build."
       );
     }
     if (typeof Lib.Collection !== "function") {
       throw new Error(
-        "LiveCache.Collection is missing. Ensure it is exported from src/index.ts and included in the UMD build.",
+        "LiveCache.Collection is missing. Ensure it is exported from src/index.ts and included in the UMD build."
       );
     }
     return Lib;
@@ -93,7 +93,7 @@
       /** @type {any} */ ({
         name,
         ...(value && typeof value === "object" ? value : { value }),
-      }),
+      })
     );
 
     return store.get(name);
@@ -180,7 +180,7 @@
   function registerController(controller) {
     if (!controller || typeof controller.name !== "string") {
       throw new Error(
-        "registerController: expected an object with a string `.name`",
+        "registerController: expected an object with a string `.name`"
       );
     }
 

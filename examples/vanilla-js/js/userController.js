@@ -5,7 +5,7 @@
  * ObjectStore exactly once.
  *
  * Requirements:
- * - `../../dist/index.js` must be loaded first (UMD), exposing `window.LiveCache`.
+ * - `../../dist/index.umd.js` must be loaded first (UMD), exposing `window.LiveCache`.
  *
  * What this file does:
  * - Defines `UserController` (extends core `Controller`)
@@ -21,7 +21,7 @@
   const Lib = window.LiveCache;
   if (!Lib) {
     throw new Error(
-      "LiveCache global not found. Ensure ../../dist/index.js is loaded before js/userController.js",
+      "LiveCache global not found. Ensure ../../dist/index.umd.js is loaded before js/userController.js",
     );
   }
 
