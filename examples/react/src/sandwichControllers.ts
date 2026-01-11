@@ -3,45 +3,6 @@ import { Collection, Controller, Document, StorageManager } from "live-cache";
 const API_BASE = "https://jsonplaceholder.typicode.com";
 const JSON_HEADERS = { "Content-Type": "application/json; charset=UTF-8" };
 
-export class LocalStorageStorageManager extends StorageManager<any> {
-  prefix: string;
-
-  constructor(prefix = "ps:") {
-    super();
-    this.prefix = prefix;
-  }
-
-  private key(name: string) {
-    return `${this.prefix}${name}`;
-  }
-
-  get<T>(name: string): T[] {
-    try {
-      const raw = localStorage.getItem(this.key(name));
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  set(name: string, models: any[]): void {
-    try {
-      localStorage.setItem(this.key(name), JSON.stringify(models));
-    } catch {
-      // ignore quota / private mode issues
-    }
-  }
-
-  delete(name: string): void {
-    try {
-      localStorage.removeItem(this.key(name));
-    } catch {
-      // ignore
-    }
-  }
-}
 
 export interface Post {
   id: number;
@@ -144,7 +105,7 @@ export class PostsController extends Controller<Post, "posts"> {
       body: payload.body,
     };
     const optimisticDoc = this.collection.insertOne(optimistic);
-    this.commit();
+    await this.commit();
 
     const res = await fetch(`${API_BASE}/posts`, {
       method: "POST",
@@ -155,7 +116,7 @@ export class PostsController extends Controller<Post, "posts"> {
     const created = (await res.json()) as Post;
 
     this.collection.findOneAndUpdate(optimisticDoc._id, created);
-    this.commit();
+    await this.commit();
 
     // Returning created allows the @mutation() decorator to apply the final value too.
     return created;
@@ -165,7 +126,7 @@ export class PostsController extends Controller<Post, "posts"> {
     this.collection.findOneAndUpdate({
       id: id,
     }, payload);
-    this.commit();
+    await this.commit();
 
     const res = await fetch(`${API_BASE}/posts/${id}`, {
       method: "PUT",
@@ -177,7 +138,7 @@ export class PostsController extends Controller<Post, "posts"> {
     this.collection.findOneAndUpdate({
       id: id,
     }, updated);
-    this.commit();
+    await this.commit();
     return updated;
   }
 
@@ -189,7 +150,7 @@ export class PostsController extends Controller<Post, "posts"> {
       },
       patch,
     );
-    this.commit();
+    await this.commit();
 
     const res = await fetch(`${API_BASE}/posts/${id}`, {
       method: "PATCH",
@@ -204,7 +165,7 @@ export class PostsController extends Controller<Post, "posts"> {
       },
       updated,
     );
-    this.commit();
+    await this.commit();
     return updated;
   }
 }
@@ -237,7 +198,7 @@ export class TodosController extends Controller<Todo, "todos"> {
       completed: payload.completed,
     };
     const optimisticDoc = this.collection.insertOne(optimistic);
-    this.commit();
+    await this.commit();
 
     const res = await fetch(`${API_BASE}/todos`, {
       method: "POST",
@@ -248,7 +209,7 @@ export class TodosController extends Controller<Todo, "todos"> {
     const created = (await res.json()) as Todo;
 
     this.collection.findOneAndUpdate(optimisticDoc._id, created);
-    this.commit();
+    await this.commit();
 
     return created;
   }
@@ -261,7 +222,7 @@ export class TodosController extends Controller<Todo, "todos"> {
       },
       payload,
     );
-    this.commit();
+    await this.commit();
 
     const res = await fetch(`${API_BASE}/todos/${id}`, {
       method: "PUT",
@@ -276,7 +237,7 @@ export class TodosController extends Controller<Todo, "todos"> {
       },
       updated,
     );
-    this.commit();
+    await this.commit();
     return updated;
   }
 
@@ -288,7 +249,7 @@ export class TodosController extends Controller<Todo, "todos"> {
       },
       patch,
     );
-    this.commit();
+    await this.commit();
 
     const res = await fetch(`${API_BASE}/todos/${id}`, {
       method: "PATCH",
@@ -303,7 +264,7 @@ export class TodosController extends Controller<Todo, "todos"> {
       },
       updated,
     );
-    this.commit();
+    await this.commit();
     return updated;
   }
 }

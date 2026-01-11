@@ -7,6 +7,7 @@ import Controller from "../core/Controller";
 interface ControllerOptions {
   store?: ObjectStore;
   initialise?: boolean;
+  abortOnUnmount?: boolean;
 }
 
 export interface UseControllerResult<TVariable, TName extends string> {
@@ -21,8 +22,9 @@ export default function useController<TVariable, TName extends string>(
   where?: string | Partial<TVariable>,
   options?: ControllerOptions,
 ): UseControllerResult<TVariable, TName> {
-  const initialise = options?.initialise ?? false;
+  const initialise = options?.initialise ?? true;
   const optionalStore = options?.store;
+  const abortOnUnmount = options?.abortOnUnmount ?? true;
 
   const [data, setData] = useState<ModelType<TVariable>[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,9 +53,12 @@ export default function useController<TVariable, TName extends string>(
     const cleanup = controller.publish(callback);
 
     return () => {
+      if (abortOnUnmount) {
+        controller.abort();
+      }
       cleanup();
     };
-  }, [controller, where, initialise]);
+  }, [controller, where, initialise, abortOnUnmount]);
 
   return { controller, data, loading, error };
 }

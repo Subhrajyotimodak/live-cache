@@ -11,6 +11,14 @@ export default class Controller<TVariable, TName extends string> {
   error: unknown = null;
   public total: number = -1;
   public pageSize: number = -1;
+  public abortController: AbortController | null = null;
+
+  public abort() {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+    this.abortController = new AbortController();
+  }
 
   protected updateTotal(total: number) {
     this.total = total;
@@ -32,12 +40,12 @@ export default class Controller<TVariable, TName extends string> {
     if (data.length !== 0) return;
 
     // If the collection is empty, check the storage manager.
-    data = this.storageManager.get(this.name);
+    data = await this.storageManager.get(this.name);
 
     if (data.length !== 0) {
       this.updateTotal(this.collection.find().length);
       this.collection.insertMany(data);
-      this.commit();
+      await this.commit();
       return;
     }
 
@@ -54,7 +62,7 @@ export default class Controller<TVariable, TName extends string> {
       this.loading = false;
     }
 
-    this.commit();
+    await this.commit();
   }
 
 
@@ -65,9 +73,9 @@ export default class Controller<TVariable, TName extends string> {
   }
 
   // subscribes to the data
-  private subscribe(model: ModelType<TVariable>[]) {
+  private async subscribe(model: ModelType<TVariable>[]) {
     // Persist the full cache snapshot for hydration.
-    this.storageManager.set(
+    await this.storageManager.set(
       this.name,
       this.collection.find().map((doc) => doc.toModel()),
     );
@@ -76,9 +84,9 @@ export default class Controller<TVariable, TName extends string> {
     });
   }
 
-  public commit() {
+  public async commit() {
     const models = this.collection.find().map((doc) => doc.toModel());
-    this.subscribe(models);
+    await this.subscribe(models);
   }
 
   // revalidates the data from the initializer
@@ -92,13 +100,13 @@ export default class Controller<TVariable, TName extends string> {
   }
 
   public reset() {
-    this.storageManager.delete(this.name);
+    void this.storageManager.delete(this.name);
     this.collection.clear();
     this.updateTotal(0);
     this.updatePageSize(-1);
     this.error = null;
     this.loading = false;
-    this.subscribe([]);
+    void this.subscribe([]);
   }
 
   constructor(name: TName, initialise = true, storageManager = new DefaultStorageManager<TVariable>(), pageSize = -1) {
@@ -107,7 +115,7 @@ export default class Controller<TVariable, TName extends string> {
     this.name = name;
     this.pageSize = pageSize;
     if (initialise) {
-      this.initialise();
+      void this.initialise();
     }
   }
 }

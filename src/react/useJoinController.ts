@@ -1,0 +1,43 @@
+import React, { useEffect, useState } from 'react'
+import Controller from '../core/Controller';
+import join from '../core/join';
+
+
+type Args = Parameters<typeof join>;
+type From = Args[0];
+type Where = Args[1];
+type Select = Args[2];
+
+type Result = ReturnType<typeof join>;
+
+interface UseJoinControllerProps {
+    from: From;
+    where: Where;
+    select: Select;
+}
+export default function useJoinController({ from, where, select }: UseJoinControllerProps) {
+
+    const [data, setData] = useState<Result>([]);
+
+
+    useEffect(() => {
+
+        const callback = () => {
+            setData(join(from, where, select));
+        }
+
+        callback();
+
+        const cleanup = from.map((c) => c.publish(callback));
+
+        return () => {
+            cleanup.forEach((c) => c());
+        }
+
+    }, [from, where, select])
+
+
+
+    return data;
+
+}
