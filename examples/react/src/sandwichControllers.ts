@@ -168,11 +168,27 @@ export class PostsController extends Controller<Post, "posts"> {
     await this.commit();
     return updated;
   }
+
+  invalidate(): () => void {
+    const timeout = setTimeout(() => {
+      this.abort();
+      this.listPosts();
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }
 }
 
 export class TodosController extends Controller<Todo, "todos"> {
   compoundKeyToObjectId(data: Todo) {
     return String(data.id);
+  }
+
+  invalidate(): () => void {
+    const timeout = setTimeout(() => {
+      this.abort();
+      this.listTodos();
+    }, 1000);
+    return () => clearTimeout(timeout);
   }
 
   async listTodos(): Promise<Todo[]> {

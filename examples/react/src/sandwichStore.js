@@ -1,6 +1,4 @@
-import join from "live-cache/core/join";
-import { createObjectStore } from "live-cache";
-import LocalStorageStorageManager from "live-cache/storage-manager/LocalStorageManager";
+import { createObjectStore, LocalStorageStorageManager } from "live-cache";
 import { PostsController, TodosController } from "./sandwichControllers";
 
 // Important: module-level singleton so React StrictMode doesn't
