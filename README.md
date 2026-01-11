@@ -110,354 +110,377 @@ todos.hydrate(savedData);
 </script>
 ```
 
-### Using CollectionRegistry
+### Using ObjectStore (recommended with Controllers)
 
-```javascript
-import { Collection, CollectionRegistry } from "live-cache";
+`ObjectStore` is a simple registry for controllers. It’s used by the React helpers, but you can use it in any framework.
 
-const registry = CollectionRegistry.instance;
+```ts
+import { createObjectStore } from "live-cache";
 
-// Create and register collections
-const users = new Collection("users");
-const posts = new Collection("posts");
-
-registry.registerCollection(users);
-registry.registerCollection(posts);
-
-// Access collections from registry
-const userCollection = registry.getCollection("users");
+const store = createObjectStore();
+// store.register(new UsersController(...))
+// store.get("users")
 ```
 
-## API Reference
+## Controllers (recommended integration layer)
 
-### `Collection<T, N>` Class
+Use `Controller<T, Name>` for **server-backed** resources: it wraps a `Collection` and adds hydration, persistence, subscriptions, and invalidation hooks.
 
-#### Constructor
+### Extending `Controller` + using `commit()`
 
-```typescript
-new Collection<T, N extends string>(name: N)
+`commit()` is the important part: it **publishes** the latest snapshot to subscribers and **persists** the snapshot using the configured `StorageManager`.
+
+```ts
+import { Controller } from "live-cache";
+
+type User = { id: number; name: string };
+
+class UsersController extends Controller<User, "users"> {
+  async fetchAll(): Promise<[User[], number]> {
+    const res = await fetch("/api/users");
+    if (!res.ok) throw new Error("Failed to fetch users");
+    const data = (await res.json()) as User[];
+    return [data, data.length];
+  }
+
+  /**
+   * Example invalidation hook (you decide what invalidation means).
+   * Common behavior is: abort in-flight fetch, clear/patch local cache, refetch, then commit.
+   */
+  invalidate(): () => void {
+    this.abort();
+    void this.refetch();
+    return () => {};
+  }
+
+  async renameUser(id: number, name: string) {
+    // Mutate the collection…
+    this.collection.findOneAndUpdate({ id }, { name });
+    // …then commit so subscribers + persistence stay in sync.
+    await this.commit();
+  }
+}
 ```
 
-Creates a new collection with the specified name.
+### Persistence (`StorageManager`)
 
-**Type Parameters:**
+Controllers persist snapshots through a `StorageManager` (array-of-models, not a JSON string).
 
-- `T`: The type of documents stored in the collection
-- `N`: The name of the collection (string literal type)
+```ts
+import { Controller, LocalStorageStorageManager } from "live-cache";
 
-#### Methods
-
-##### `insertOne(data: T): Document<T>`
-
-Inserts a single document into the collection.
-
-**Parameters:**
-
-- `data`: The document data to insert
-
-**Returns:** The created `Document` instance with auto-generated `_id`
-
-##### `insertMany(dataArray: T[]): Document<T>[]`
-
-Inserts multiple documents into the collection at once.
-
-**Parameters:**
-
-- `dataArray`: Array of document data to insert
-
-**Returns:** Array of created `Document` instances
-
-##### `findOne(where: string | Partial<T>): Document<T> | null`
-
-Finds a single document by `_id` or by matching conditions.
-
-**Parameters:**
-
-- `where`: Either a document `_id` (string) or an object with conditions to match
-
-**Returns:** The matching `Document` or `null` if not found
-
-##### `find(where?: Partial<T>): Document<T>[]`
-
-Finds all documents matching the conditions.
-
-**Parameters:**
-
-- `where` (optional): Conditions to match. If omitted, returns all documents
-
-**Returns:** Array of matching `Document` instances
-
-##### `findOneAndUpdate(where: string | Partial<T>, update: Partial<T>): Document<T> | null`
-
-Finds a document and updates it with new data.
-
-**Parameters:**
-
-- `where`: Either a document `_id` (string) or conditions to match
-- `update`: Object with fields to update
-
-**Returns:** The updated `Document` or `null` if not found
-
-##### `deleteOne(where: string | Partial<T>): boolean`
-
-Deletes a single document by `_id` or by matching conditions.
-
-**Parameters:**
-
-- `where`: Either a document `_id` (string) or conditions to match
-
-**Returns:** `true` if a document was deleted, `false` otherwise
-
-##### `serialize(): string`
-
-Serializes the collection to a JSON string for storage.
-
-**Returns:** JSON string representation of the collection
-
-##### `dehydrate(): string`
-
-Alias for `serialize()` for semantic clarity.
-
-**Returns:** JSON string representation of the collection
-
-##### `hydrate(serializedData: string): void`
-
-Restores collection data from a serialized string, replacing existing data.
-
-**Parameters:**
-
-- `serializedData`: JSON string from `serialize()` or `dehydrate()`
-
-##### Static Methods
-
-##### `Collection.deserialize<T, N>(name: N, serializedData: string): Collection<T, N>`
-
-Creates a new collection instance from serialized data.
-
-**Parameters:**
-
-- `name`: Name for the new collection
-- `serializedData`: JSON string from `serialize()`
-
-**Returns:** New `Collection` instance with restored data
-
-##### `Collection.hash(data: any): string`
-
-Generates an MD5 hash of the provided data. Used internally for indexing.
-
-**Parameters:**
-
-- `data`: Data to hash
-
-**Returns:** MD5 hash string
-
----
-
-### `Document<T>` Class
-
-Represents a single document in a collection.
-
-#### Properties
-
-- `_id: string` - Auto-generated MongoDB-style ID (24-character hex string)
-- `updatedAt: number` - Timestamp of last update (milliseconds since epoch)
-
-#### Methods
-
-##### `toModel(): T & { _id: string }`
-
-Returns a plain object representation of the document including its `_id`.
-
-**Returns:** Object with all document data plus `_id`
-
-##### `updateData(data: Partial<T>): void`
-
-Updates the document's data and refreshes the `updatedAt` timestamp.
-
-**Parameters:**
-
-- `data`: Partial object with fields to update
-
-##### Static Methods
-
-##### `Document.generateId(counter: number): string`
-
-Generates a MongoDB-style ObjectId (24-character hex string).
-
-**Parameters:**
-
-- `counter`: Incrementing counter value
-
-**Returns:** 24-character hex ID string
-
----
-
-### `CollectionRegistry` Class
-
-Singleton registry for managing multiple collections.
-
-#### Static Properties
-
-##### `CollectionRegistry.instance`
-
-Gets the singleton instance of the registry.
-
-**Returns:** The `CollectionRegistry` instance
-
-#### Methods
-
-##### `registerCollection<T, N>(collection: Collection<T, N>): void`
-
-Registers a collection in the registry.
-
-**Parameters:**
-
-- `collection`: The collection to register
-
-##### `removeCollection(name: string): void`
-
-Removes a collection from the registry.
-
-**Parameters:**
-
-- `name`: Name of the collection to remove
-
-##### `getCollection<T, N>(name: string): Collection<T, N> | null`
-
-Retrieves a collection by name.
-
-**Parameters:**
-
-- `name`: Name of the collection
-
-**Returns:** The collection or `null` if not found
-
-## Development
-
-### Build the Library
-
-```bash
-# Install dependencies
-npm install
-
-# Build the library
-npm run build
-
-# Watch mode for development
-npm run dev
+const users = new UsersController(
+  "users",
+  true,
+  new LocalStorageStorageManager("my-app:")
+);
 ```
 
-This will generate:
+## React integration
 
-- `dist/index.js` - UMD build for browsers
-- `dist/index.esm.js` - ES Module build
-- `dist/index.d.ts` - TypeScript type definitions
+Use `ContextProvider` to provide an `ObjectStore`, `useRegister()` to register controllers, and `useController()` to subscribe to a controller.
 
-### Project Structure
+```tsx
+import React from "react";
+import { ContextProvider, useRegister, useController } from "live-cache";
 
-```
-live-cache/
-├── src/                    # Source code (TypeScript)
-│   ├── core/              # Core library modules
-│   │   ├── Collection.ts  # Collection class with indexing
-│   │   ├── Document.ts    # Document class
-│   │   └── CollectionRegistry.ts  # Registry singleton
-│   └── index.ts           # Main entry point
-├── dist/                  # Built files (generated)
-├── examples/              # Example implementations
-│   ├── vanilla-js/       # Plain JavaScript example
-│   └── react/            # React example
-├── package.json
-├── tsconfig.json          # TypeScript configuration
-├── rollup.config.js       # Build configuration
-└── README.md
-```
+const usersController = new UsersController("users");
 
-## Examples
+function App() {
+  useRegister([usersController]);
+  const { data, loading, error, controller } = useController(
+    "users",
+    undefined,
+    {
+      withInvalidation: true,
+    }
+  );
 
-The `examples/` folder contains working examples:
+  if (loading) return <div>Loading…</div>;
+  if (error) return <div>Something went wrong</div>;
 
-### Vanilla JavaScript Example
-
-Located in `examples/vanilla-js/`, this demonstrates using the library in a plain HTML/JavaScript environment.
-
-**To run:**
-
-1. Build the library: `npm run build`
-2. Open `examples/vanilla-js/index.html` in your browser
-
-### React Example
-
-Located in `examples/react/`, this shows how to use the library in a React application.
-
-**To run:**
-
-```bash
-# From the root directory
-npm run build
-
-# Navigate to the React example
-cd examples/react
-npm install
-npm run dev
-```
-
-Then open `http://localhost:5173` in your browser.
-
-## TypeScript Support
-
-This library is written in TypeScript and includes type definitions out of the box. No need for `@types` packages!
-
-```typescript
-import { Collection, Document } from "live-cache";
-
-interface User {
-  name: string;
-  email: string;
-  age: number;
+  return (
+    <div>
+      <button onClick={() => void controller.invalidate()}>Refresh</button>
+      {data.map((u) => (
+        <div key={u._id}>{u.name}</div>
+      ))}
+    </div>
+  );
 }
 
-const users = new Collection<User, "users">("users");
+export default function Root() {
+  return (
+    <ContextProvider>
+      <App />
+    </ContextProvider>
+  );
+}
+```
 
-const user: Document<User> = users.insertOne({
-  name: "Alice",
-  email: "alice@example.com",
-  age: 28,
+## Cache invalidation recipes
+
+These show **framework-agnostic** controller patterns and a **React** wiring example for each.
+
+### 1) Timeout-based cache invalidation (TTL)
+
+#### Framework-agnostic
+
+```ts
+import { Controller } from "live-cache";
+
+type Post = { id: number; title: string };
+
+class PostsController extends Controller<Post, "posts"> {
+  private ttlMs: number;
+  private lastFetchedAt = 0;
+  private cleanupInvalidation: (() => void) | null = null;
+
+  constructor(name: "posts", ttlMs = 30_000) {
+    super(name);
+    this.ttlMs = ttlMs;
+  }
+
+  async fetchAll(): Promise<[Post[], number]> {
+    const res = await fetch("/api/posts");
+    const data = (await res.json()) as Post[];
+    this.lastFetchedAt = Date.now();
+    return [data, data.length];
+  }
+
+  /**
+   * TTL invalidation lives here:
+   * - first call wires up the interval
+   * - subsequent calls perform the TTL check and revalidate if expired
+   */
+  invalidate(): () => void {
+    if (!this.cleanupInvalidation) {
+      const id = window.setInterval(() => void this.invalidate(), this.ttlMs);
+      this.cleanupInvalidation = () => {
+        window.clearInterval(id);
+        this.cleanupInvalidation = null;
+      };
+    }
+
+    const now = Date.now();
+    const fresh = this.lastFetchedAt && now - this.lastFetchedAt < this.ttlMs;
+    if (fresh) return this.cleanupInvalidation!;
+
+    this.abort();
+    void this.refetch();
+    return this.cleanupInvalidation!;
+  }
+}
+
+const posts = new PostsController("posts", 10_000);
+posts.invalidate(); // starts the interval + performs initial TTL check
+```
+
+#### React
+
+```tsx
+function PostsPage() {
+  useRegister([posts]);
+  const { data } = useController("posts", undefined, {
+    withInvalidation: true,
+  });
+
+  return data.map((p) => <div key={p._id}>{p.title}</div>);
+}
+```
+
+### 2) SWR-style invalidation (stale-while-revalidate)
+
+#### Framework-agnostic
+
+```ts
+import { Controller } from "live-cache";
+
+type Todo = { id: number; title: string };
+
+class TodosController extends Controller<Todo, "todos"> {
+  private revalidateAfterMs = 30_000;
+  private lastFetchedAt = 0;
+  private cleanupInvalidation: (() => void) | null = null;
+
+  async fetchAll(): Promise<[Todo[], number]> {
+    const res = await fetch("/api/todos");
+    const data = (await res.json()) as Todo[];
+    this.lastFetchedAt = Date.now();
+    return [data, data.length];
+  }
+
+  async initialise(): Promise<void> {
+    // hydrate/publish cached snapshot first (super.initialise does this)
+    await super.initialise();
+
+    // then revalidate in background if stale
+    const stale =
+      !this.lastFetchedAt ||
+      Date.now() - this.lastFetchedAt > this.revalidateAfterMs;
+    if (stale) void this.refetch();
+  }
+
+  invalidate(): () => void {
+    // SWR-style invalidation wiring lives here:
+    // - first call wires up triggers (focus/online)
+    // - every call can also trigger a revalidation
+    if (!this.cleanupInvalidation) {
+      const revalidate = () => {
+        this.abort();
+        void this.refetch();
+      };
+      window.addEventListener("focus", revalidate);
+      window.addEventListener("online", revalidate);
+      this.cleanupInvalidation = () => {
+        window.removeEventListener("focus", revalidate);
+        window.removeEventListener("online", revalidate);
+        this.cleanupInvalidation = null;
+      };
+    }
+
+    this.abort();
+    void this.refetch();
+    return this.cleanupInvalidation!;
+  }
+}
+```
+
+#### React
+
+```tsx
+function TodosPage() {
+  useRegister([todos]);
+  const { data, loading, controller } = useController("todos", undefined, {
+    withInvalidation: true,
+  });
+
+  return (
+    <div>
+      {loading ? <div>Revalidating…</div> : null}
+      <button onClick={() => void controller.invalidate()}>Revalidate</button>
+      {data.map((t) => (
+        <div key={t._id}>{t.title}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 3) Websocket-based invalidation (push)
+
+#### Framework-agnostic
+
+```ts
+type InvalidationMsg =
+  | { type: "invalidate"; controller: "users" }
+  | { type: "patch-user"; id: number; name: string };
+
+class UsersController extends Controller<
+  { id: number; name: string },
+  "users"
+> {
+  private ws: WebSocket | null = null;
+  private cleanupInvalidation: (() => void) | null = null;
+
+  async fetchAll() {
+    const res = await fetch("/api/users");
+    const data = (await res.json()) as { id: number; name: string }[];
+    return [data, data.length] as const;
+  }
+
+  /**
+   * Websocket subscription lives here:
+   * - first call attaches the socket + listeners
+   * - incoming messages either trigger a refetch or apply a patch + commit
+   */
+  invalidate(): () => void {
+    if (this.cleanupInvalidation) return this.cleanupInvalidation;
+
+    const ws = new WebSocket("wss://example.com/ws");
+    this.ws = ws;
+    this.cleanupInvalidation = () => {
+      this.ws?.close();
+      this.ws = null;
+      this.cleanupInvalidation = null;
+    };
+
+    ws.addEventListener("message", (evt) => {
+      const msg = JSON.parse(String(evt.data)) as InvalidationMsg;
+
+      if (msg.type === "invalidate" && msg.controller === "users") {
+        this.abort();
+        void this.refetch();
+        return;
+      }
+
+      if (msg.type === "patch-user") {
+        this.collection.findOneAndUpdate({ id: msg.id }, { name: msg.name });
+        void this.commit();
+      }
+    });
+    return this.cleanupInvalidation;
+  }
+}
+```
+
+#### React
+
+```tsx
+function UsersPage() {
+  useRegister([usersController]);
+  const { data, controller } = useController("users", undefined, {
+    withInvalidation: true,
+  });
+
+  return data.map((u) => <div key={u._id}>{u.name}</div>);
+}
+```
+
+## Joins (advanced)
+
+Join data across controllers with `join(from, where, select)` or subscribe in React via `useJoinController`.
+
+```ts
+import { join } from "live-cache";
+
+const result = join(
+  [usersController, postsController] as const,
+  {
+    $and: {
+      posts: { userId: { $ref: { controller: "users", field: "id" } } },
+    },
+  } as const,
+  ["users.name", "posts.title"] as const
+);
+```
+
+```tsx
+import { useJoinController } from "live-cache";
+
+const rows = useJoinController({
+  from: [usersController, postsController] as const,
+  where: {
+    $and: {
+      posts: { userId: { $ref: { controller: "users", field: "id" } } },
+    },
+  } as const,
+  select: ["users.name", "posts.title"] as const,
 });
-
-// Type-safe queries
-const alice = users.findOne({ name: "Alice" });
-if (alice) {
-  console.log(alice.toModel().email); // Type: string
-}
 ```
 
-## Performance
+## API Reference (high-level)
 
-LiveCache uses hash-based indexing for fast lookups:
+For full details, see the TSDoc on the exported APIs.
 
-- **Indexed queries**: O(1) average case for exact matches
-- **Linear fallback**: O(n) for partial matches or hash collisions
-- **Automatic indexing**: All document properties are automatically indexed
-- **Memory efficient**: Indexes only store document IDs
+- **Core**: `Collection`, `Document`, `Controller`, `ObjectStore`, `StorageManager`, `DefaultStorageManager`, `join`\n+- **Storage managers**: `LocalStorageStorageManager`, `IndexDbStorageManager`\n+- **React**: `ContextProvider`, `useRegister`, `useController`, `useJoinController`\n\n## Development
 
-## Use Cases
-
-- 🎮 Game state management
-- 📝 Local todo/note applications
-- 💬 Offline-first chat applications
-- 🛒 Shopping cart state
-- 📊 Local data caching
-- 🔄 Syncing with backend databases
-
-## Dependencies
-
-- `object-hash` - For generating stable hashes from objects
+```bash
+npm install
+npm run build
+npm run dev
+```
 
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Feel free to submit a Pull Request.

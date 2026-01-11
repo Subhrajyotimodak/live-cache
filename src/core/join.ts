@@ -1,6 +1,32 @@
 import Controller from "./Controller";
 import { ModelType } from "./Document";
 
+/**
+ * Join data across multiple controllers by applying cross-controller equality constraints.
+ *
+ * `where.$and[controllerName]` can include:
+ * - literal: `{ id: 1 }`
+ * - join ref: `{ userId: { $ref: { controller: "users", field: "id" } } }`
+ * - eq: `{ status: { $eq: "active" } }`
+ *
+ * `select` supports:
+ * - array of qualified keys: `["users.id", "posts.title"]`
+ * - select-map for aliasing: `{ "users.id": "userId", "posts.title": "title" }`
+ * - mixed array: `["users.id", { "posts.title": "title" }]`
+ *
+ * @example
+ * ```ts
+ * const rows = join(
+ *   [usersController, postsController] as const,
+ *   {
+ *     $and: {
+ *       posts: { userId: { $ref: { controller: "users", field: "id" } } },
+ *     },
+ *   } as const,
+ *   ["users.name", "posts.title"] as const,
+ * );
+ * ```
+ */
 type ControllerName<C> = C extends Controller<any, infer N> ? N : never;
 type ControllerVar<C> = C extends Controller<infer V, any> ? V : never;
 

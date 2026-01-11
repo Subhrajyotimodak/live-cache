@@ -8,6 +8,7 @@ interface ControllerOptions {
   store?: ObjectStore;
   initialise?: boolean;
   abortOnUnmount?: boolean;
+  withInvalidation?: boolean;
 }
 
 export interface UseControllerResult<TVariable, TName extends string> {
@@ -17,6 +18,28 @@ export interface UseControllerResult<TVariable, TName extends string> {
   error: unknown;
 }
 
+/**
+ * React hook to subscribe to a registered controller.
+ *
+ * - Looks up the controller by name from the `ObjectStore` (context by default)
+ * - Subscribes to `controller.publish()`
+ * - Exposes `data`, `loading`, `error`, and the `controller` instance
+ *
+ * @param name - controller name
+ * @param where - optional `Collection.find()` filter (string `_id` or partial)
+ * @param options - store selection, initialise behavior, abort-on-unmount, and invalidation wiring
+ *
+ * When `options.withInvalidation` is true, this hook calls `controller.invalidate()` once on mount
+ * and calls the returned cleanup function on unmount.
+ *
+ * @example
+ * ```tsx
+ * const { data, controller } = useController<User, "users">("users");
+ * return (
+ *   <button onClick={() => void controller.invalidate()}>Refresh</button>
+ * );
+ * ```
+ */
 export default function useController<TVariable, TName extends string>(
   name: TName,
   where?: string | Partial<TVariable>,
@@ -25,6 +48,7 @@ export default function useController<TVariable, TName extends string>(
   const initialise = options?.initialise ?? true;
   const optionalStore = options?.store;
   const abortOnUnmount = options?.abortOnUnmount ?? true;
+  const withInvalidation = options?.withInvalidation ?? true;
 
   const [data, setData] = useState<ModelType<TVariable>[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -52,13 +76,19 @@ export default function useController<TVariable, TName extends string>(
 
     const cleanup = controller.publish(callback);
 
+    let cleanupInvalidation: () => void = () => { };
+    if (withInvalidation) {
+      cleanupInvalidation = controller.invalidate();
+    }
+
     return () => {
       if (abortOnUnmount) {
         controller.abort();
       }
       cleanup();
+      cleanupInvalidation();
     };
-  }, [controller, where, initialise, abortOnUnmount]);
+  }, [controller, where, initialise, abortOnUnmount, withInvalidation]);
 
   return { controller, data, loading, error };
 }

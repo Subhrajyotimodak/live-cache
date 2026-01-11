@@ -4,6 +4,17 @@
 
 import Document from "./Document";
 
+/**
+ * An in-memory collection of documents with simple hash-based indexes.
+ *
+ * - Insert/update/delete operations keep indexes consistent.
+ * - `find()` / `findOne()` attempt indexed lookups first and fall back to linear scan.
+ *
+ * This is commonly used via `Controller.collection`.
+ *
+ * @typeParam TVariable - the data shape stored in the collection (without `_id`)
+ * @typeParam TName - the collection name (string-literal type)
+ */
 export default class Collection<TVariable, TName extends string> {
   // hash of conditions mapping to _id
   private dataMap: Record<string, Document<TVariable>> = {};
@@ -12,6 +23,9 @@ export default class Collection<TVariable, TName extends string> {
 
   constructor(public name: TName) { }
 
+  /**
+   * Clear all in-memory documents and indexes.
+   */
   public clear() {
     this.dataMap = {};
     this.indexes = {};
@@ -195,6 +209,11 @@ export default class Collection<TVariable, TName extends string> {
 
   /**
    * Find a document and update it with new data
+   *
+   * @example
+   * ```ts
+   * users.findOneAndUpdate({ id: 1 }, { name: "Updated" });
+   * ```
    */
   findOneAndUpdate(
     where: string | Partial<TVariable>,
@@ -337,7 +356,7 @@ export default class Collection<TVariable, TName extends string> {
   }
 
   static hash(data: any): string {
-    // Browser-safe hashing: stable stringify + FNV-1a (32-bit)
+    // Browser-safe hashing: stable stringify + FNV-1a (32-bit).
     return Collection.fnv1a(Collection.stableStringify(data));
   }
 

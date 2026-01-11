@@ -15,6 +15,19 @@ interface UseJoinControllerProps {
     where: Where;
     select: Select;
 }
+
+/**
+ * React hook that recomputes a `join()` projection whenever any of the `from` controllers commit.
+ *
+ * @example
+ * ```tsx
+ * const rows = useJoinController({
+ *   from: [usersController, postsController] as const,
+ *   where: { $and: { posts: { userId: { $ref: { controller: "users", field: "id" } } } } } as const,
+ *   select: ["users.name", "posts.title"] as const,
+ * });
+ * ```
+ */
 export default function useJoinController({ from, where, select }: UseJoinControllerProps) {
 
     const [data, setData] = useState<Result>([]);

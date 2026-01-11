@@ -1,5 +1,11 @@
 import { StorageManager } from "../core/StorageManager";
 
+/**
+ * `localStorage`-backed `StorageManager`.
+ *
+ * Stores snapshots as JSON under `${prefix}${name}`.
+ * Reads return `[]` on failure (private mode, JSON parse issues, etc).
+ */
 export default class LocalStorageStorageManager extends StorageManager<any> {
     prefix: string;
 

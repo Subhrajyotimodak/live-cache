@@ -21,6 +21,8 @@ export interface IndexDbStorageManagerOptions {
  * IndexedDB-backed StorageManager.
  *
  * This is fully async (no in-memory cache needed).
+ *
+ * Stores snapshots as array-of-models under `${prefix}${name}`.
  */
 export default class IndexDbStorageManager extends StorageManager<any> {
     private dbName: string;

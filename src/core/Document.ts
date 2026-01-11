@@ -2,6 +2,18 @@
  * A Single Model stores the data for a single item.
  */
 
+/**
+ * A single stored record.
+ *
+ * `Document<T>` wraps raw data and adds:
+ * - a generated `_id` (MongoDB-style ObjectId)
+ * - `updatedAt` timestamp, refreshed on updates
+ *
+ * Use `toModel()` when you need a plain object including `_id`
+ * (this is what `Controller` publishes and persists).
+ *
+ * @typeParam TVariable - data shape without `_id`
+ */
 export default class Document<TVariable> {
   public _id: string;
   private data: TVariable;
@@ -24,6 +36,9 @@ export default class Document<TVariable> {
     this.updatedAt = Date.now();
   }
 
+  /**
+   * Convert to a plain model including `_id`.
+   */
   toModel() {
     return {
       _id: this._id,
@@ -31,10 +46,18 @@ export default class Document<TVariable> {
     };
   }
 
+  /**
+   * Convert to raw data (without `_id`).
+   */
   toData() {
     return { ...this.data };
   }
 
+  /**
+   * Generate a MongoDB-style ObjectId (24 hex characters).
+   *
+   * Format: timestamp (4 bytes) + random process id (5 bytes) + counter (3 bytes)
+   */
   static generateId(_counter: number): string {
     // MongoDB ObjectId structure (12 bytes = 24 hex chars):
     // - 4 bytes: timestamp (seconds since Unix epoch)
@@ -60,4 +83,7 @@ export default class Document<TVariable> {
   }
 }
 
+/**
+ * Convenience type: the return type of `Document<T>["toModel"]`.
+ */
 export type ModelType<K> = ReturnType<Document<K>["toModel"]>;
