@@ -7,7 +7,7 @@ export default {
   external: ["react"],
   output: [
     {
-      file: "dist/index.js",
+      file: "dist/index.umd.js",
       format: "umd",
       name: "LiveCache",
       sourcemap: true,
@@ -16,8 +16,14 @@ export default {
       },
     },
     {
-      file: "dist/index.esm.js",
+      file: "dist/index.mjs",
       format: "esm",
+      sourcemap: true,
+    },
+    {
+      file: "dist/index.cjs",
+      format: "cjs",
+      exports: "named",
       sourcemap: true,
     },
   ],

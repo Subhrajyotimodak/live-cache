@@ -2,17 +2,31 @@
   "name": "live-cache",
   "version": "0.1.0",
   "description": "A client-side cache + controller library for stateful resources",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "browser": "./dist/index.umd.js",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "unpkg": "dist/index.umd.js",
+  "jsdelivr": "dist/index.umd.js",
   "files": [
     "dist"
   ],
   "scripts": {
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "rollup -c",
     "dev": "rollup -c -w",
+    "prepublishOnly": "npm run clean && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "sideEffects": false,
   "keywords": [
     "javascript",
     "typescript",
@@ -33,6 +47,9 @@
   },
   "peerDependencies": {
     "react": ">=16.8"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "object-hash": "^3.0.0"
