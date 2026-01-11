@@ -2,25 +2,21 @@
  * A Single Model stores the data for a single item.
  */
 
-type TVariable<K> = {
-  [key in keyof K]: K[keyof K];
-};
-
-export default class Document<K> {
+export default class Document<TVariable> {
   public _id: string;
-  private data: TVariable<K>;
+  private data: TVariable;
   public updatedAt: number;
 
   // Random value generated once per process (5 bytes)
   private static processId = Math.floor(Math.random() * 0xffffffffff);
 
-  constructor(data: TVariable<K>, counter = 0 * 0xffffff) {
+  constructor(data: TVariable, counter = 0 * 0xffffff) {
     this._id = Document.generateId(counter);
     this.data = data;
     this.updatedAt = Date.now();
   }
 
-  updateData(data: Partial<TVariable<K>>) {
+  updateData(data: Partial<TVariable>) {
     this.data = {
       ...this.data,
       ...data,
@@ -33,6 +29,10 @@ export default class Document<K> {
       _id: this._id,
       ...this.data,
     };
+  }
+
+  toData() {
+    return { ...this.data };
   }
 
   static generateId(_counter: number): string {

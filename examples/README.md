@@ -1,6 +1,6 @@
 # Examples
 
-This folder contains example implementations of the ProjectSandwich library.
+This folder contains example implementations of the LiveCache library.
 
 ## Available Examples
 
@@ -9,12 +9,14 @@ This folder contains example implementations of the ProjectSandwich library.
 A simple HTML page demonstrating how to use the library with plain JavaScript.
 
 **Features:**
+
 - Uses the UMD build
 - Interactive form to create and update sandwiches
 - Beautiful, modern UI
 - No build step required (just open in browser after building the library)
 
 **How to run:**
+
 ```bash
 # From project root
 npm run build
@@ -27,6 +29,7 @@ npm run build
 A modern React application using Vite as the build tool.
 
 **Features:**
+
 - Uses the ES Module build
 - React hooks for state management
 - Interactive UI with animations
@@ -34,6 +37,7 @@ A modern React application using Vite as the build tool.
 - Hot module replacement in development
 
 **How to run:**
+
 ```bash
 # From project root
 npm run build
@@ -48,24 +52,25 @@ npm run dev
 
 ## Creating Your Own Example
 
-To use ProjectSandwich in your own project:
+To use LiveCache in your own project:
 
 1. Install the library:
+
    ```bash
-   npm install project-sandwich
+   npm install live-cache
    ```
 
 2. Import and use:
+
    ```javascript
-   import { createSandwich } from 'project-sandwich';
-   
+   import { createSandwich } from "live-cache";
+
    const sandwich = createSandwich({
-     bread: 'sourdough',
-     filling: 'turkey'
+     bread: "sourdough",
+     filling: "turkey",
    });
-   
+
    console.log(sandwich.describe());
    ```
 
 See the individual example READMEs for more details!
-

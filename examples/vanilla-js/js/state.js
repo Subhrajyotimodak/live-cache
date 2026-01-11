@@ -2,10 +2,10 @@
  * ObjectStore-backed global state helpers for the vanilla example.
  *
  * This file is designed for the UMD/browser build where the library is exposed as:
- *   window.ProjectSandwich
+ *   window.LiveCache
  *
  * It uses:
- *   ProjectSandwich.getDefaultObjectStore()
+ *   LiveCache.getDefaultObjectStore()
  *
  * as the global registry for app state (and optionally controllers).
  *
@@ -30,23 +30,23 @@
   }
 
   /**
-   * @returns {any} ProjectSandwich UMD global
+   * @returns {any} LiveCache UMD global
    */
   function requireLib() {
-    const Lib = global.ProjectSandwich;
+    const Lib = global.LiveCache;
     if (!Lib) {
       throw new Error(
-        "ProjectSandwich global not found. Ensure ../../dist/index.js is loaded before state.js",
+        "LiveCache global not found. Ensure ../../dist/index.js is loaded before state.js",
       );
     }
     if (typeof Lib.getDefaultObjectStore !== "function") {
       throw new Error(
-        "ProjectSandwich.getDefaultObjectStore is missing. Ensure it is exported from src/index.ts and included in the UMD build.",
+        "LiveCache.getDefaultObjectStore is missing. Ensure it is exported from src/index.ts and included in the UMD build.",
       );
     }
     if (typeof Lib.Collection !== "function") {
       throw new Error(
-        "ProjectSandwich.Collection is missing. Ensure it is exported from src/index.ts and included in the UMD build.",
+        "LiveCache.Collection is missing. Ensure it is exported from src/index.ts and included in the UMD build.",
       );
     }
     return Lib;

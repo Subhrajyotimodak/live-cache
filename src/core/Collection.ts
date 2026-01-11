@@ -10,7 +10,13 @@ export default class Collection<TVariable, TName extends string> {
   private indexes: Record<string, string[]> = {};
   private counter: number = 0;
 
-  constructor(public name: TName) {}
+  constructor(public name: TName) { }
+
+  public clear() {
+    this.dataMap = {};
+    this.indexes = {};
+    this.counter = 0;
+  }
 
   /**
    * Add a document to all relevant indexes
@@ -83,7 +89,6 @@ export default class Collection<TVariable, TName extends string> {
    */
   findOne(where: string | Partial<TVariable>): Document<TVariable> | null {
     if (typeof where === "string") {
-      // find by _id
       return this.dataMap[where] || null;
     }
 
@@ -110,10 +115,15 @@ export default class Collection<TVariable, TName extends string> {
   /**
    * Find all documents matching the conditions (optimized with indexes)
    */
-  find(where?: Partial<TVariable>): Document<TVariable>[] {
+  find(where?: string | Partial<TVariable>): Document<TVariable>[] {
     // If no conditions, return all documents
     if (!where || Object.keys(where).length === 0) {
       return Object.values(this.dataMap);
+    }
+
+    if (typeof where === "string") {
+      const doc = this.dataMap[where];
+      return doc ? [doc] : [];
     }
 
     // Try to use index for faster lookup
@@ -179,6 +189,7 @@ export default class Collection<TVariable, TName extends string> {
 
     // Remove from dataMap
     delete this.dataMap[doc._id];
+
     return true;
   }
 
@@ -190,8 +201,12 @@ export default class Collection<TVariable, TName extends string> {
     update: Partial<TVariable>,
   ): Document<TVariable> | null {
     const doc = this.findOne(where);
+    if (!update) return doc;
     if (!doc) {
-      return null;
+      // If document not found, insert a new one with the provided update data
+      const newDoc = this.insertOne(update as TVariable);
+      this.addToIndexes(newDoc);
+      return newDoc;
     }
 
     // Keep indexes consistent: remove old index entries, update, then re-index
@@ -258,19 +273,17 @@ export default class Collection<TVariable, TName extends string> {
           const docData = data.documents[i];
           const { _id, ...rest } = docData;
 
-          // Create document without counter increment
+          // Create document without counter increment. Internal _id is generated.
           const doc = new Document<T>(rest as any, i);
 
-          // Manually set the original _id
-          (doc as any)._id = _id;
-
-          // Add to dataMap
-          collection.dataMap[_id] = doc;
+          // Add to dataMap using the generated internal id
+          collection.dataMap[doc._id] = doc;
 
           // Rebuild indexes for this document
           collection.addToIndexes(doc);
         }
       }
+
     } catch (error) {
       console.error("Failed to deserialize collection data:", error);
     }
@@ -298,19 +311,17 @@ export default class Collection<TVariable, TName extends string> {
           const docData = data.documents[i];
           const { _id, ...rest } = docData;
 
-          // Create document without counter increment
+          // Create document without counter increment. Internal _id is generated.
           const doc = new Document<TVariable>(rest as any, i);
 
-          // Manually set the original _id
-          (doc as any)._id = _id;
-
-          // Add to dataMap
+          // Add to dataMap using the generated internal id
           this.dataMap[_id] = doc;
 
           // Rebuild indexes for this document
           this.addToIndexes(doc);
         }
       }
+
     } catch (error) {
       console.error("Failed to hydrate collection:", error);
     }

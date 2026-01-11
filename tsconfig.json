@@ -3,6 +3,7 @@
     "target": "ES2015",
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
+    "jsx": "react",
     "declaration": true,
     "outDir": "./dist",
     "strict": true,
@@ -11,9 +12,9 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "experimentalDecorators": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "examples"]
 }
-

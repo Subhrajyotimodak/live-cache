@@ -5,7 +5,7 @@
  * ObjectStore exactly once.
  *
  * Requirements:
- * - `../../dist/index.js` must be loaded first (UMD), exposing `window.ProjectSandwich`.
+ * - `../../dist/index.js` must be loaded first (UMD), exposing `window.LiveCache`.
  *
  * What this file does:
  * - Defines `UserController` (extends core `Controller`)
@@ -18,16 +18,16 @@
 (function () {
   "use strict";
 
-  const Lib = window.ProjectSandwich;
+  const Lib = window.LiveCache;
   if (!Lib) {
     throw new Error(
-      "ProjectSandwich global not found. Ensure ../../dist/index.js is loaded before js/userController.js",
+      "LiveCache global not found. Ensure ../../dist/index.js is loaded before js/userController.js",
     );
   }
 
   if (!Lib.Controller || !Lib.getDefaultObjectStore) {
     throw new Error(
-      "Missing core exports on ProjectSandwich. Expected Controller + getDefaultObjectStore.",
+      "Missing core exports on LiveCache. Expected Controller + getDefaultObjectStore.",
     );
   }
 

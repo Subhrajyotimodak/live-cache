@@ -2,12 +2,12 @@
  * Vanilla JS example app script
  *
  * Goals:
- * - Use `ProjectSandwich.getDefaultObjectStore()` as the global state container
+ * - Use `LiveCache.getDefaultObjectStore()` as the global state container
  * - Use the registered `UserController` (registered by `js/userController.js`)
  * - Drive the UI using the controller's underlying `collection`
  *
  * Assumptions:
- * - `../../dist/index.js` is loaded first (UMD => `window.ProjectSandwich`)
+ * - `../../dist/index.js` is loaded first (UMD => `window.LiveCache`)
  * - `js/userController.js` is loaded before this file and registers "User"
  * - index.html contains the required element IDs referenced below
  */
@@ -15,7 +15,7 @@
 (function () {
   "use strict";
 
-  const Lib = /** @type {any} */ (window.ProjectSandwich);
+  const Lib = /** @type {any} */ (window.LiveCache);
 
   function $(id) {
     const el = document.getElementById(id);
@@ -66,7 +66,7 @@
       showLibStatus(
         "danger",
         "Library not found",
-        "The UMD bundle did not load, so `window.ProjectSandwich` is undefined. Build the project to generate `dist/index.js`, then reload this page.",
+        "The UMD bundle did not load, so `window.LiveCache` is undefined. Build the project to generate `dist/index.js`, then reload this page.",
       );
       return null;
     }
@@ -80,7 +80,7 @@
       showLibStatus(
         "danger",
         "Core exports missing",
-        `ProjectSandwich loaded, but these exports are missing: ${missing.join(
+        `LiveCache loaded, but these exports are missing: ${missing.join(
           ", ",
         )}. Check src/index.ts exports and rebuild.`,
       );

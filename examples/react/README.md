@@ -1,6 +1,6 @@
 # React Example
 
-This example demonstrates how to use ProjectSandwich in a React application.
+This example demonstrates how to use LiveCache in a React application.
 
 ## How to Run
 

@@ -1,6 +1,6 @@
 # Vanilla JavaScript Example
 
-This example demonstrates how to use ProjectSandwich in a plain HTML/JavaScript environment.
+This example demonstrates how to use LiveCache in a plain HTML/JavaScript environment.
 
 ## How to Run
 
@@ -23,5 +23,5 @@ This example shows:
 - Updating sandwich properties
 - Using the library's API in a vanilla JS context
 
-The library is available as a global `ProjectSandwich` object when loaded via the UMD build.
+The library is available as a global `LiveCache` object when loaded via the UMD build.
 

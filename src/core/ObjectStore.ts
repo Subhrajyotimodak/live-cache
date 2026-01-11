@@ -18,6 +18,16 @@ export default class ObjectStore {
 
     return controller as Controller<TVariable, TName>;
   }
+
+  remove<TVariable, TName extends string>(name: TName) {
+    this.store.delete(name);
+  }
+
+  initialise() {
+    this.store.forEach((controller) => {
+      controller.initialise();
+    });
+  }
 }
 
 const _objectStore = new ObjectStore();

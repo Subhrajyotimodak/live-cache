@@ -1,4 +1,4 @@
-# 📚 ProjectSandwich
+# LiveCache
 
 A lightweight, type-safe client-side database library for JavaScript written in TypeScript. Store and query data collections directly in the browser with MongoDB-like syntax.
 
@@ -15,7 +15,7 @@ A lightweight, type-safe client-side database library for JavaScript written in 
 ## Installation
 
 ```bash
-npm install project-sandwich
+npm install live-cache
 ```
 
 Or use it directly in the browser via UMD build:
@@ -23,7 +23,7 @@ Or use it directly in the browser via UMD build:
 ```html
 <script src="path/to/dist/index.js"></script>
 <script>
-  const { Collection } = ProjectSandwich;
+  const { Collection } = LiveCache;
   const users = new Collection("users");
 </script>
 ```
@@ -33,7 +33,7 @@ Or use it directly in the browser via UMD build:
 ### ES Modules (Recommended)
 
 ```javascript
-import { Collection } from "project-sandwich";
+import { Collection } from "live-cache";
 
 // Create a collection
 const users = new Collection("users");
@@ -69,7 +69,7 @@ users.deleteOne("507f1f77bcf86cd799439011"); // Delete by _id
 ### Persistence with Serialization
 
 ```javascript
-import { Collection } from "project-sandwich";
+import { Collection } from "live-cache";
 
 const todos = new Collection("todos");
 
@@ -94,9 +94,9 @@ todos.hydrate(savedData);
 ### Browser (UMD)
 
 ```html
-<script src="node_modules/project-sandwich/dist/index.js"></script>
+<script src="node_modules/live-cache/dist/index.js"></script>
 <script>
-  const { Collection } = ProjectSandwich;
+  const { Collection } = LiveCache;
 
   const products = new Collection("products");
   products.insertOne({
@@ -113,7 +113,7 @@ todos.hydrate(savedData);
 ### Using CollectionRegistry
 
 ```javascript
-import { Collection, CollectionRegistry } from "project-sandwich";
+import { Collection, CollectionRegistry } from "live-cache";
 
 const registry = CollectionRegistry.instance;
 
@@ -356,7 +356,7 @@ This will generate:
 ### Project Structure
 
 ```
-project-sandwich/
+live-cache/
 ├── src/                    # Source code (TypeScript)
 │   ├── core/              # Core library modules
 │   │   ├── Collection.ts  # Collection class with indexing
@@ -409,7 +409,7 @@ Then open `http://localhost:5173` in your browser.
 This library is written in TypeScript and includes type definitions out of the box. No need for `@types` packages!
 
 ```typescript
-import { Collection, Document } from "project-sandwich";
+import { Collection, Document } from "live-cache";
 
 interface User {
   name: string;
@@ -434,7 +434,7 @@ if (alice) {
 
 ## Performance
 
-ProjectSandwich uses hash-based indexing for fast lookups:
+LiveCache uses hash-based indexing for fast lookups:
 
 - **Indexed queries**: O(1) average case for exact matches
 - **Linear fallback**: O(n) for partial matches or hash collisions

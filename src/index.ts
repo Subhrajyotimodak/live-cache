@@ -6,6 +6,11 @@ import ObjectStore, {
   createObjectStore,
   getDefaultObjectStore,
 } from "./core/ObjectStore";
+import { DefaultStorageManager, StorageManager } from "./core/StorageManager";
+
+// React helpers
+import ContextProvider, { useRegister } from "./react/Context";
+import useController from "./react/useController";
 
 // Export core classes / helpers
 export {
@@ -15,6 +20,11 @@ export {
   ObjectStore,
   createObjectStore,
   getDefaultObjectStore,
+  StorageManager,
+  DefaultStorageManager,
+  ContextProvider,
+  useRegister,
+  useController,
 };
 
 // Default export for UMD/browser usage
@@ -25,4 +35,9 @@ export default {
   ObjectStore,
   createObjectStore,
   getDefaultObjectStore,
+  StorageManager,
+  DefaultStorageManager,
+  ContextProvider,
+  useRegister,
+  useController,
 };

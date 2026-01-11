@@ -1,7 +1,7 @@
 {
-  "name": "project-sandwich",
+  "name": "live-cache",
   "version": "0.1.0",
-  "description": "A client-side JavaScript library",
+  "description": "A client-side cache + controller library for stateful resources",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -25,9 +25,14 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/object-hash": "^3.0.6",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
     "rollup": "^4.9.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
   },
   "dependencies": {
     "object-hash": "^3.0.0"
