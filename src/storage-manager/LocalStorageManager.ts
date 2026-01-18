@@ -7,11 +7,9 @@ import { StorageManager } from "../core/StorageManager";
  * Reads return `[]` on failure (private mode, JSON parse issues, etc).
  */
 export default class LocalStorageStorageManager extends StorageManager<any> {
-    prefix: string;
 
     constructor(prefix = "live-cache:") {
-        super();
-        this.prefix = prefix;
+        super(prefix);
     }
 
     private key(name: string) {
@@ -43,5 +41,9 @@ export default class LocalStorageStorageManager extends StorageManager<any> {
         } catch {
             // ignore
         }
+    }
+
+    async getParams(): Promise<string[]> {
+        return Object.keys(localStorage).filter(key => key.startsWith(this.prefix)).map(key => key.replace(this.prefix, ""));
     }
 }

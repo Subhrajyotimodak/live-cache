@@ -29,12 +29,15 @@ export interface UseControllerResult<TVariable, TName extends string> {
  * @param where - optional `Collection.find()` filter (string `_id` or partial)
  * @param options - store selection, initialise behavior, abort-on-unmount, and invalidation wiring
  *
- * When `options.withInvalidation` is true, this hook calls `controller.invalidate()` once on mount
- * and calls the returned cleanup function on unmount.
+ * When `options.withInvalidation` is true, this hook calls
+ * `controller.invalidator.registerInvalidation()` on mount and
+ * `controller.invalidator.unregisterInvalidation()` on unmount.
  *
  * @example
  * ```tsx
- * const { data, controller } = useController<User, "users">("users");
+ * const { data, controller } = useController<User, "users">("users", undefined, {
+ *   withInvalidation: true,
+ * });
  * return (
  *   <button onClick={() => void controller.invalidate()}>Refresh</button>
  * );
@@ -62,9 +65,6 @@ export default function useController<TVariable, TName extends string>(
 
   const controller = useMemo(() => store.get<TVariable, TName>(name), [store, name]);
   useEffect(() => {
-    if (initialise) {
-      controller.initialise();
-    }
     const callback = () => {
       setLoading(controller.loading);
       setError(controller.error ?? null);
@@ -76,17 +76,21 @@ export default function useController<TVariable, TName extends string>(
 
     const cleanup = controller.publish(callback);
 
-    let cleanupInvalidation: () => void = () => { };
     if (withInvalidation) {
-      cleanupInvalidation = controller.invalidate();
+      controller.invalidator.registerInvalidation();
     }
+
+    if (initialise) {
+      void store.initialiseOnce<TVariable, TName>(name);
+    }
+
 
     return () => {
       if (abortOnUnmount) {
         controller.abort();
       }
       cleanup();
-      cleanupInvalidation();
+      controller.invalidator.unregisterInvalidation();
     };
   }, [controller, where, initialise, abortOnUnmount, withInvalidation]);
 

@@ -375,25 +375,25 @@ export default function join<const Cs extends Tuple2Plus, const W extends JoinWh
     });
 }
 
-// Type-check-only example (kept unreachable to avoid runtime side effects).
-if (false) {
-    join(
-        [
-            new Controller<{ name: string; age: number; city: string }, "users">("users"),
-            new Controller<{ name: string; title: string; body: string; creator: string }, "posts">("posts"),
-        ],
-        {
-            $and: {
-                users: {
-                    name: {
-                        $ref: {
-                            controller: "posts",
-                            field: "creator",
-                        },
-                    },
-                },
-            },
-        } as const,
-        ["posts._id"]
-    )[0];
-}
+// // Type-check-only example (kept unreachable to avoid runtime side effects).
+// if (false) {
+//     join(
+//         [
+//             new Controller<{ name: string; age: number; city: string }, "users">("users"),
+//             new Controller<{ name: string; title: string; body: string; creator: string }, "posts">("posts"),
+//         ],
+//         {
+//             $and: {
+//                 users: {
+//                     name: {
+//                         $ref: {
+//                             controller: "posts",
+//                             field: "creator",
+//                         },
+//                     },
+//                 },
+//             },
+//         } as const,
+//         ["posts._id"]
+//     )[0];
+// }

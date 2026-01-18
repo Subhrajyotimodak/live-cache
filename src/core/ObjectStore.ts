@@ -15,6 +15,7 @@ import Controller from "./Controller";
  */
 export default class ObjectStore {
   public store = new Map<string, Controller<any, any>>();
+  private initialisePromises = new WeakMap<Controller<any, any>, Promise<void>>();
 
   /**
    * Register a controller instance in this store.
@@ -56,6 +57,24 @@ export default class ObjectStore {
     this.store.forEach((controller) => {
       controller.initialise();
     });
+  }
+
+  /**
+   * Initialise a controller once per store, even if multiple callers request it.
+   */
+  initialiseOnce<TVariable, TName extends string>(name: TName) {
+    const controller = this.get<TVariable, TName>(name);
+    const existing = this.initialisePromises.get(controller);
+    if (existing) return existing;
+
+    const promise = controller.initialise().finally(() => {
+      if (this.initialisePromises.get(controller) === promise) {
+        this.initialisePromises.delete(controller);
+      }
+    });
+
+    this.initialisePromises.set(controller, promise);
+    return promise;
   }
 }
 

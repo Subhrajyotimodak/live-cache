@@ -1,5 +1,6 @@
 import Collection from "./Collection";
 import Document, { ModelType } from "./Document";
+import { DefaultInvalidator, Invalidator } from "./Invalidator";
 import { DefaultStorageManager, StorageManager } from "./StorageManager";
 
 /**
@@ -42,17 +43,23 @@ import { DefaultStorageManager, StorageManager } from "./StorageManager";
  * }
  * ```
  */
+export interface ControllerOptions<TVariable, TName extends string> {
+  storageManager?: StorageManager<TVariable[]>;
+  pageSize?: number;
+  invalidator?: Invalidator<TVariable>;
+  initialiseOnMount?: boolean;
+}
 export default class Controller<TVariable, TName extends string> {
   public name: TName;
   public collection: Collection<TVariable, TName>;
   protected subscribers: Set<(model: ModelType<TVariable>[]) => void> = new Set();
-  protected storageManager: StorageManager<TVariable>;
+  protected storageManager: StorageManager<TVariable[]>;
   loading: boolean = false;
   error: unknown = null;
   public total: number = -1;
   public pageSize: number = -1;
   public abortController: AbortController | null = null;
-
+  public invalidator: Invalidator<TVariable>;
   /**
    * Abort any in-flight work owned by this controller (typically network fetches).
    *
@@ -95,12 +102,15 @@ export default class Controller<TVariable, TName extends string> {
    * A successful initialise ends with `commit()` so subscribers receive the latest snapshot.
    */
   public async initialise(): Promise<void> {
+    if (this.loading) return;
     // If the collection is not empty, return.
     let data = this.collection.find().map((doc) => doc.toData());
-    if (data.length !== 0) return;
+    if (data.length !== 0) {
+      return;
+    }
 
     // If the collection is empty, check the storage manager.
-    data = await this.storageManager.get(this.name);
+    data = (await this.storageManager.get(this.name)) ?? [];
 
     if (data.length !== 0) {
       this.updateTotal(this.collection.find().length);
@@ -115,6 +125,7 @@ export default class Controller<TVariable, TName extends string> {
       const [_data, total] = await this.fetchAll();
       this.collection.insertMany(_data);
       this.updateTotal(total);
+      await this.commit();
     } catch (error) {
       this.error = error;
     }
@@ -122,7 +133,6 @@ export default class Controller<TVariable, TName extends string> {
       this.loading = false;
     }
 
-    await this.commit();
   }
 
   /**
@@ -191,7 +201,7 @@ export default class Controller<TVariable, TName extends string> {
    * This method should return a cleanup function that unregisters any timers/listeners/sockets
    * created as part of invalidation wiring.
    */
-  public invalidate(...data: TVariable[]): () => void {
+  public invalidate(...data: TVariable[]): void {
     throw Error("Not Implemented");
   }
 
@@ -213,19 +223,24 @@ export default class Controller<TVariable, TName extends string> {
    * Create a controller.
    *
    * @param name - stable controller/collection name
-   * @param initialise - whether to run `initialise()` immediately
    * @param storageManager - where snapshots are persisted (defaults to no-op)
    * @param pageSize - optional pagination hint (userland)
    */
-  constructor(name: TName, initialise = true, storageManager = new DefaultStorageManager<TVariable>(), pageSize = -1) {
+  constructor(name: TName, {
+    storageManager = new DefaultStorageManager<TVariable[]>("live-cache:"),
+    pageSize = -1,
+    invalidator = new DefaultInvalidator<TVariable>(),
+    initialiseOnMount = true,
+  }: ControllerOptions<TVariable, TName>) {
+    this.name = name;
     this.collection = new Collection(name);
     this.storageManager = storageManager;
-    this.name = name;
     this.pageSize = pageSize;
-    if (initialise) {
-      void this.initialise();
+    this.invalidator = invalidator;
+    this.invalidator.bind(this.invalidate.bind(this));
+    if (initialiseOnMount) {
+      this.initialise();
     }
-
   }
 }
 

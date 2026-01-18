@@ -7,6 +7,7 @@ import ObjectStore, {
   createObjectStore,
   getDefaultObjectStore,
 } from "./core/ObjectStore";
+import Transactions from "./core/Transactions";
 import { DefaultStorageManager, StorageManager } from "./core/StorageManager";
 import IndexDbStorageManager from "./storage-manager/IndexDbStorageManager";
 import LocalStorageStorageManager from "./storage-manager/LocalStorageManager";
@@ -15,6 +16,10 @@ import LocalStorageStorageManager from "./storage-manager/LocalStorageManager";
 import ContextProvider, { useRegister } from "./react/Context";
 import useController from "./react/useController";
 import useJoinController from "./react/useJoinController";
+
+// Invalidators
+import { DefaultInvalidator, Invalidator } from "./core/Invalidator";
+import TimeoutInvalidator from "./invalidator/TimeoutInvalidator";
 
 // Export core classes / helpers
 export {
@@ -25,6 +30,7 @@ export {
   ObjectStore,
   createObjectStore,
   getDefaultObjectStore,
+  Transactions,
   StorageManager,
   DefaultStorageManager,
   IndexDbStorageManager,
@@ -33,6 +39,9 @@ export {
   useRegister,
   useController,
   useJoinController,
+  DefaultInvalidator,
+  Invalidator,
+  TimeoutInvalidator,
 };
 
 // Default export for UMD/browser usage
@@ -44,6 +53,7 @@ export default {
   ObjectStore,
   createObjectStore,
   getDefaultObjectStore,
+  Transactions,
   StorageManager,
   DefaultStorageManager,
   IndexDbStorageManager,
@@ -52,4 +62,7 @@ export default {
   useRegister,
   useController,
   useJoinController,
+  DefaultInvalidator,
+  Invalidator,
+  TimeoutInvalidator,
 };

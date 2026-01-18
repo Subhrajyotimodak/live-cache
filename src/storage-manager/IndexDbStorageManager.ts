@@ -27,12 +27,11 @@ export interface IndexDbStorageManagerOptions {
 export default class IndexDbStorageManager extends StorageManager<any> {
     private dbName: string;
     private storeName: string;
-    private prefix: string;
 
     private dbPromise: Promise<IDBDatabase> | null = null;
 
     constructor(options: IndexDbStorageManagerOptions = {}) {
-        super();
+        super(options.prefix ?? "live-cache:");
         this.dbName = options.dbName ?? "live-cache";
         this.storeName = options.storeName ?? "collections";
         this.prefix = options.prefix ?? "live-cache:";
@@ -136,6 +135,16 @@ export default class IndexDbStorageManager extends StorageManager<any> {
         } catch {
             // ignore delete errors
         }
+    }
+
+    async getParams(): Promise<string[]> {
+        const db = await this.openDb();
+        return new Promise((resolve, reject) => {
+            const req = db.transaction(this.storeName, "readonly").objectStore(this.storeName).getAllKeys();
+            const keys = req.result.map(x => x.toString().replace(this.prefix, ""));
+            req.onsuccess = () => resolve(keys);
+            req.onerror = () => reject(req.error ?? new Error("IndexedDB get params failed"));
+        });
     }
 }
 

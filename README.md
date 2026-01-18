@@ -10,6 +10,8 @@ A lightweight, type-safe client-side database library for JavaScript written in 
 - ⚡ Fast indexed queries using hash-based lookups
 - 💾 Built-in serialization/deserialization for persistence
 - 🔍 MongoDB-like query interface
+- 🧰 Optimistic transactions with rollback support
+- ♻️ Pluggable invalidation strategies (timeouts, focus, websockets)
 - 🎨 Beautiful examples included
 
 ## Installation
@@ -147,10 +149,9 @@ class UsersController extends Controller<User, "users"> {
    * Example invalidation hook (you decide what invalidation means).
    * Common behavior is: abort in-flight fetch, clear/patch local cache, refetch, then commit.
    */
-  invalidate(): () => void {
+  invalidate() {
     this.abort();
     void this.refetch();
-    return () => {};
   }
 
   async renameUser(id: number, name: string) {
@@ -169,16 +170,48 @@ Controllers persist snapshots through a `StorageManager` (array-of-models, not a
 ```ts
 import { Controller, LocalStorageStorageManager } from "live-cache";
 
-const users = new UsersController(
-  "users",
-  true,
-  new LocalStorageStorageManager("my-app:")
-);
+const users = new UsersController("users", {
+  storageManager: new LocalStorageStorageManager("my-app:"),
+});
+// Other options: pageSize, invalidator, initialiseOnMount
+```
+
+### Transactions (optimistic updates)
+
+Transactions store collection snapshots so you can rollback failed mutations.
+
+```ts
+import { Controller, Transactions, LocalStorageStorageManager } from "live-cache";
+
+// Do this once at app startup.
+Transactions.createInstance(new LocalStorageStorageManager("my-app:tx:"));
+
+class UsersController extends Controller<User, "users"> {
+  async updateUser(id: number, patch: Partial<User>) {
+    const transaction = await Transactions.add(this.collection);
+    try {
+      this.collection.findOneAndUpdate({ id }, patch);
+      await this.commit();
+
+      // ...perform server request...
+
+      await Transactions.finish(this.name);
+    } catch (error) {
+      const previous = await Transactions.rollback(transaction, this.name);
+      this.collection.hydrate(previous.serialize());
+      await this.commit();
+      throw error;
+    }
+  }
+}
 ```
 
 ## React integration
 
 Use `ContextProvider` to provide an `ObjectStore`, `useRegister()` to register controllers, and `useController()` to subscribe to a controller.
+`useController()` automatically wires invalidators by calling
+`controller.invalidator.registerInvalidation()` on mount and
+`controller.invalidator.unregisterInvalidation()` on unmount.
 
 ```tsx
 import React from "react";
@@ -222,22 +255,32 @@ export default function Root() {
 
 These show **framework-agnostic** controller patterns and a **React** wiring example for each.
 
+### TODO: More invalidation strategies
+- [ ] Manual trigger
+- [ ] SWR on demand
+- [ ] Polling with backoff
+- [ ] ETag / If-Modified-Since
+- [ ] Server-Sent Events (SSE)
+- [ ] LRU-based invalidation
+- [ ] Background sync
+
 ### 1) Timeout-based cache invalidation (TTL)
 
 #### Framework-agnostic
 
 ```ts
-import { Controller } from "live-cache";
+import { Controller, TimeoutInvalidator } from "live-cache";
 
 type Post = { id: number; title: string };
 
 class PostsController extends Controller<Post, "posts"> {
   private ttlMs: number;
   private lastFetchedAt = 0;
-  private cleanupInvalidation: (() => void) | null = null;
 
   constructor(name: "posts", ttlMs = 30_000) {
-    super(name);
+    super(name, {
+      invalidator: new TimeoutInvalidator<Post>(ttlMs, { immediate: true }),
+    });
     this.ttlMs = ttlMs;
   }
 
@@ -249,31 +292,20 @@ class PostsController extends Controller<Post, "posts"> {
   }
 
   /**
-   * TTL invalidation lives here:
-   * - first call wires up the interval
-   * - subsequent calls perform the TTL check and revalidate if expired
+   * TTL invalidation logic lives here (TimeoutInvalidator triggers this).
    */
-  invalidate(): () => void {
-    if (!this.cleanupInvalidation) {
-      const id = window.setInterval(() => void this.invalidate(), this.ttlMs);
-      this.cleanupInvalidation = () => {
-        window.clearInterval(id);
-        this.cleanupInvalidation = null;
-      };
-    }
-
+  invalidate() {
     const now = Date.now();
     const fresh = this.lastFetchedAt && now - this.lastFetchedAt < this.ttlMs;
-    if (fresh) return this.cleanupInvalidation!;
+    if (fresh) return;
 
     this.abort();
     void this.refetch();
-    return this.cleanupInvalidation!;
   }
 }
 
 const posts = new PostsController("posts", 10_000);
-posts.invalidate(); // starts the interval + performs initial TTL check
+posts.invalidator.registerInvalidation(); // starts interval + initial check
 ```
 
 #### React
@@ -294,14 +326,33 @@ function PostsPage() {
 #### Framework-agnostic
 
 ```ts
-import { Controller } from "live-cache";
+import { Controller, Invalidator } from "live-cache";
 
 type Todo = { id: number; title: string };
+
+class SwrInvalidator<T> extends Invalidator<T> {
+  private revalidate = () => this.invalidator();
+
+  registerInvalidation() {
+    window.addEventListener("focus", this.revalidate);
+    window.addEventListener("online", this.revalidate);
+  }
+
+  unregisterInvalidation() {
+    window.removeEventListener("focus", this.revalidate);
+    window.removeEventListener("online", this.revalidate);
+  }
+}
 
 class TodosController extends Controller<Todo, "todos"> {
   private revalidateAfterMs = 30_000;
   private lastFetchedAt = 0;
-  private cleanupInvalidation: (() => void) | null = null;
+
+  constructor(name: "todos") {
+    super(name, {
+      invalidator: new SwrInvalidator<Todo>(),
+    });
+  }
 
   async fetchAll(): Promise<[Todo[], number]> {
     const res = await fetch("/api/todos");
@@ -321,29 +372,14 @@ class TodosController extends Controller<Todo, "todos"> {
     if (stale) void this.refetch();
   }
 
-  invalidate(): () => void {
-    // SWR-style invalidation wiring lives here:
-    // - first call wires up triggers (focus/online)
-    // - every call can also trigger a revalidation
-    if (!this.cleanupInvalidation) {
-      const revalidate = () => {
-        this.abort();
-        void this.refetch();
-      };
-      window.addEventListener("focus", revalidate);
-      window.addEventListener("online", revalidate);
-      this.cleanupInvalidation = () => {
-        window.removeEventListener("focus", revalidate);
-        window.removeEventListener("online", revalidate);
-        this.cleanupInvalidation = null;
-      };
-    }
-
+  invalidate() {
     this.abort();
     void this.refetch();
-    return this.cleanupInvalidation!;
   }
 }
+
+const todos = new TodosController("todos");
+todos.invalidator.registerInvalidation();
 ```
 
 #### React
@@ -372,6 +408,8 @@ function TodosPage() {
 #### Framework-agnostic
 
 ```ts
+import { Controller, Invalidator } from "live-cache";
+
 type InvalidationMsg =
   | { type: "invalidate"; controller: "users" }
   | { type: "patch-user"; id: number; name: string };
@@ -380,9 +418,6 @@ class UsersController extends Controller<
   { id: number; name: string },
   "users"
 > {
-  private ws: WebSocket | null = null;
-  private cleanupInvalidation: (() => void) | null = null;
-
   async fetchAll() {
     const res = await fetch("/api/users");
     const data = (await res.json()) as { id: number; name: string }[];
@@ -390,38 +425,46 @@ class UsersController extends Controller<
   }
 
   /**
-   * Websocket subscription lives here:
-   * - first call attaches the socket + listeners
-   * - incoming messages either trigger a refetch or apply a patch + commit
+   * Websocket message handling lives here (wiring lives in an Invalidator).
    */
-  invalidate(): () => void {
-    if (this.cleanupInvalidation) return this.cleanupInvalidation;
+  invalidate(msg?: InvalidationMsg) {
+    if (!msg) return;
+    if (msg.type === "invalidate" && msg.controller === "users") {
+      this.abort();
+      void this.refetch();
+      return;
+    }
 
+    if (msg.type === "patch-user") {
+      this.collection.findOneAndUpdate({ id: msg.id }, { name: msg.name });
+      void this.commit();
+    }
+  }
+}
+
+class WebsocketInvalidator extends Invalidator<InvalidationMsg> {
+  private ws: WebSocket | null = null;
+
+  registerInvalidation() {
     const ws = new WebSocket("wss://example.com/ws");
     this.ws = ws;
-    this.cleanupInvalidation = () => {
-      this.ws?.close();
-      this.ws = null;
-      this.cleanupInvalidation = null;
-    };
 
     ws.addEventListener("message", (evt) => {
       const msg = JSON.parse(String(evt.data)) as InvalidationMsg;
-
-      if (msg.type === "invalidate" && msg.controller === "users") {
-        this.abort();
-        void this.refetch();
-        return;
-      }
-
-      if (msg.type === "patch-user") {
-        this.collection.findOneAndUpdate({ id: msg.id }, { name: msg.name });
-        void this.commit();
-      }
+      this.invalidator(msg);
     });
-    return this.cleanupInvalidation;
+  }
+
+  unregisterInvalidation() {
+    this.ws?.close();
+    this.ws = null;
   }
 }
+
+const usersController = new UsersController("users", {
+  invalidator: new WebsocketInvalidator(),
+});
+usersController.invalidator.registerInvalidation();
 ```
 
 #### React
@@ -473,7 +516,8 @@ const rows = useJoinController({
 
 For full details, see the TSDoc on the exported APIs.
 
-- **Core**: `Collection`, `Document`, `Controller`, `ObjectStore`, `StorageManager`, `DefaultStorageManager`, `join`
+- **Core**: `Collection`, `Document`, `Controller`, `ObjectStore`, `StorageManager`, `DefaultStorageManager`, `join`, `Transactions`
+- **Invalidation**: `Invalidator`, `DefaultInvalidator`, `TimeoutInvalidator`
 - **Storage managers**: `LocalStorageStorageManager`, `IndexDbStorageManager`
 - **React**: `ContextProvider`, `useRegister`, `useController`, `useJoinController`
 
