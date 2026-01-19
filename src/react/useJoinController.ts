@@ -41,7 +41,7 @@ export default function useJoinController({ from, where, select }: UseJoinContro
 
         callback();
 
-        const cleanup = from.map((c) => c.publish(callback));
+        const cleanup = from.map((c) => c.subscribe(callback));
 
         return () => {
             cleanup.forEach((c) => c());

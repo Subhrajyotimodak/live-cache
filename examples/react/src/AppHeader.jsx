@@ -1,10 +1,15 @@
 import { useController } from "live-cache";
 
-export default function AppHeader({ tab, setTab, disabled }) {
+export default function AppHeader({
+  tab,
+  setTab,
+  disabled,
+  controllerOptions,
+}) {
   // Intentionally call the hook in multiple places to ensure
   // the same controller doesn't trigger duplicate network calls.
-  const posts = useController("posts");
-  const todos = useController("todos");
+  const posts = useController("posts", undefined, controllerOptions);
+  const todos = useController("todos", undefined, controllerOptions);
 
   return (
     <>

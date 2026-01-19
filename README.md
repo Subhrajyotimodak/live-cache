@@ -14,6 +14,12 @@ A lightweight, type-safe client-side database library for JavaScript written in 
 - ♻️ Pluggable invalidation strategies (timeouts, focus, websockets)
 - 🎨 Beautiful examples included
 
+## Examples
+
+See the `examples/` folder for ready-to-run demos:
+- `examples/react`: PokéAPI explorer built with controllers + `useController`
+- `examples/vanilla-js`: Simple browser demo using the UMD build
+
 ## Installation
 
 ```bash
@@ -132,17 +138,29 @@ Use `Controller<T, Name>` for **server-backed** resources: it wraps a `Collectio
 
 `commit()` is the important part: it **publishes** the latest snapshot to subscribers and **persists** the snapshot using the configured `StorageManager`.
 
+The `fetch(where?)` method can fetch all data or query-specific data based on the `where` parameter:
+
 ```ts
 import { Controller } from "live-cache";
 
 type User = { id: number; name: string };
 
 class UsersController extends Controller<User, "users"> {
-  async fetchAll(): Promise<[User[], number]> {
-    const res = await fetch("/api/users");
-    if (!res.ok) throw new Error("Failed to fetch users");
-    const data = (await res.json()) as User[];
-    return [data, data.length];
+  async fetch(where?: string | Partial<User>): Promise<[User[], number]> {
+    // Fetch all users if no where clause
+    if (!where) {
+      const res = await fetch("/api/users");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const data = (await res.json()) as User[];
+      return [data, data.length];
+    }
+
+    // Fetch specific user by id or name
+    const id = typeof where === "string" ? where : where.id;
+    const res = await fetch(`/api/users/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch user");
+    const data = (await res.json()) as User;
+    return [[data], 1];
   }
 
   /**
@@ -151,7 +169,7 @@ class UsersController extends Controller<User, "users"> {
    */
   invalidate() {
     this.abort();
-    void this.refetch();
+    void this.update();
   }
 
   async renameUser(id: number, name: string) {
@@ -159,6 +177,68 @@ class UsersController extends Controller<User, "users"> {
     this.collection.findOneAndUpdate({ id }, { name });
     // …then commit so subscribers + persistence stay in sync.
     await this.commit();
+  }
+}
+```
+
+### Real-world example: PokéAPI integration
+
+Here's a complete example from the `examples/react` demo showing how to build controllers for a public API:
+
+```ts
+import { Controller } from "live-cache";
+
+const API_BASE = "https://pokeapi.co/api/v2";
+
+// Controller for fetching the list of Pokémon
+class PokemonListController extends Controller<{ name: string; url: string }, "pokemonList"> {
+  constructor(name, options) {
+    super(name, options);
+    this.limit = 24;
+  }
+
+  async fetch() {
+    this.abort();
+    const response = await fetch(`${API_BASE}/pokemon?limit=${this.limit}`, {
+      signal: this.abortController?.signal,
+    });
+    if (!response.ok) throw new Error(`GET /pokemon failed (${response.status})`);
+    const data = await response.json();
+    return [data.results ?? [], data.count ?? 0];
+  }
+
+  invalidate() {
+    this.abort();
+    void this.update();
+  }
+}
+
+// Controller for fetching individual Pokémon details
+class PokemonDetailsController extends Controller<any, "pokemonDetails"> {
+  resolveQuery(where) {
+    if (!where) return null;
+    if (typeof where === "string") return where;
+    if (where.name) return String(where.name);
+    if (where.id !== undefined) return String(where.id);
+    return null;
+  }
+
+  async fetch(where) {
+    const query = this.resolveQuery(where);
+    if (!query) return [[], 0];
+
+    this.abort();
+    const response = await fetch(`${API_BASE}/pokemon/${query}`, {
+      signal: this.abortController?.signal,
+    });
+    if (!response.ok) throw new Error(`GET /pokemon/${query} failed (${response.status})`);
+    const data = await response.json();
+    return [[data], 1];
+  }
+
+  invalidate() {
+    this.abort();
+    void this.update(this.lastQuery);
   }
 }
 ```
@@ -213,6 +293,8 @@ Use `ContextProvider` to provide an `ObjectStore`, `useRegister()` to register c
 `controller.invalidator.registerInvalidation()` on mount and
 `controller.invalidator.unregisterInvalidation()` on unmount.
 
+### Basic example
+
 ```tsx
 import React from "react";
 import { ContextProvider, useRegister, useController } from "live-cache";
@@ -250,6 +332,40 @@ export default function Root() {
   );
 }
 ```
+
+### Query-based fetching example
+
+You can pass a `where` clause to `useController()` to fetch specific data:
+
+```tsx
+import { useController } from "live-cache";
+import { useMemo } from "react";
+
+function PokemonDetails({ query }) {
+  // Convert query string to where clause
+  const where = useMemo(() => ({ name: query }), [query]);
+
+  const { data, loading, error } = useController(
+    "pokemonDetails",
+    where,
+    { initialise: !!where }
+  );
+
+  const pokemon = data[0];
+  if (loading) return <div>Loading Pokémon…</div>;
+  if (error) return <div>Error: {String(error)}</div>;
+  if (!pokemon) return null;
+
+  return (
+    <div>
+      <h2>{pokemon.name}</h2>
+      <img src={pokemon.sprites.front_default} alt={pokemon.name} />
+    </div>
+  );
+}
+```
+
+See `examples/react` for a complete PokéAPI explorer implementation with multiple components using controllers.
 
 ## Cache invalidation recipes
 

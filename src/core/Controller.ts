@@ -47,19 +47,20 @@ export interface ControllerOptions<TVariable, TName extends string> {
   storageManager?: StorageManager<TVariable[]>;
   pageSize?: number;
   invalidator?: Invalidator<TVariable>;
-  initialiseOnMount?: boolean;
 }
 export default class Controller<TVariable, TName extends string> {
   public name: TName;
   public collection: Collection<TVariable, TName>;
   protected subscribers: Set<(model: ModelType<TVariable>[]) => void> = new Set();
-  protected storageManager: StorageManager<TVariable[]>;
+  public storageManager: StorageManager<TVariable[]>;
   loading: boolean = false;
   error: unknown = null;
   public total: number = -1;
-  public pageSize: number = -1;
+  public page: number = 0;
+  public limit: number = 10;
   public abortController: AbortController | null = null;
   public invalidator: Invalidator<TVariable>;
+  public initialised: boolean = false;
   /**
    * Abort any in-flight work owned by this controller (typically network fetches).
    *
@@ -69,16 +70,20 @@ export default class Controller<TVariable, TName extends string> {
   public abort() {
     if (this.abortController) {
       this.abortController.abort();
+      this.abortController = null;
     }
-    this.abortController = new AbortController();
   }
 
-  protected updateTotal(total: number) {
+  public updateTotal(total: number) {
     this.total = total;
   }
 
-  protected updatePageSize(pageSize: number) {
-    this.pageSize = pageSize;
+  public updatePage(page: number) {
+    this.page = page;
+  }
+
+  public updateLimit(limit: number) {
+    this.limit = limit;
   }
 
   /**
@@ -87,8 +92,18 @@ export default class Controller<TVariable, TName extends string> {
    * Subclasses must implement this. Return `[rows, total]` where `total` is the
    * total number of rows available on the backend (useful for pagination).
    */
-  public async fetchAll(): Promise<[TVariable[], number]> {
+  public async fetch(where?: string | Partial<TVariable>): Promise<[TVariable[], number]> {
     throw Error("Not Implemented");
+  }
+
+  public async nextPage(where?: string | Partial<TVariable>): Promise<void> {
+    this.updatePage(this.page + 1);
+    await this.update(where);
+  }
+
+  public async previousPage(where?: string | Partial<TVariable>): Promise<void> {
+    this.updatePage(this.page - 1);
+    await this.update(where);
   }
 
   /**
@@ -101,38 +116,44 @@ export default class Controller<TVariable, TName extends string> {
    *
    * A successful initialise ends with `commit()` so subscribers receive the latest snapshot.
    */
-  public async initialise(): Promise<void> {
-    if (this.loading) return;
+  public async initialise(where?: string | Partial<TVariable>): Promise<void> {
+    this.abortController = new AbortController();
     // If the collection is not empty, return.
-    let data = this.collection.find().map((doc) => doc.toData());
+    let data = this.collection.find(where).map((doc) => doc.toData());
     if (data.length !== 0) {
+      this.updateTotal(data.length);
+      await this.commit();
       return;
     }
 
-    // If the collection is empty, check the storage manager.
-    data = (await this.storageManager.get(this.name)) ?? [];
+    const fromStorage = await this.storageManager.get(this.name);
+    if (fromStorage && fromStorage.length !== 0) {
+      const __collection = new Collection<TVariable, TName>(this.name);
+      __collection.insertMany(fromStorage);
+      const __data = __collection.find(where).map(x => x.toData());
 
-    if (data.length !== 0) {
-      this.updateTotal(this.collection.find().length);
-      this.collection.insertMany(data);
-      await this.commit();
-      return;
+      if (__data.length !== 0) {
+        this.collection.insertMany(__data);
+        this.updateTotal(__data.length);
+        await this.commit();
+        return;
+      }
     }
 
     // If the storage manager is empty, fetch the data from the server.
     try {
       this.loading = true;
-      const [_data, total] = await this.fetchAll();
+      const [_data, total] = await this.fetch(where);
       this.collection.insertMany(_data);
       this.updateTotal(total);
-      await this.commit();
     } catch (error) {
       this.error = error;
     }
     finally {
       this.loading = false;
-    }
+      await this.commit();
 
+    }
   }
 
   /**
@@ -148,7 +169,7 @@ export default class Controller<TVariable, TName extends string> {
    * unsubscribe();
    * ```
    */
-  public publish(onChange: (data: ModelType<TVariable>[]) => void) {
+  public subscribe(onChange: (models: ModelType<TVariable>[]) => void) {
     this.subscribers.add(onChange);
     return () => this.subscribers.delete(onChange);
   }
@@ -158,14 +179,14 @@ export default class Controller<TVariable, TName extends string> {
    *
    * This is intentionally private: consumers should use `commit()` which computes the snapshot.
    */
-  private async subscribe(model: ModelType<TVariable>[]) {
+  private async publish(models: ModelType<TVariable>[]) {
     // Persist the full cache snapshot for hydration.
     await this.storageManager.set(
       this.name,
       this.collection.find().map((doc) => doc.toModel()),
     );
     this.subscribers.forEach((sub) => {
-      sub(model);
+      sub(models);
     });
   }
 
@@ -178,7 +199,7 @@ export default class Controller<TVariable, TName extends string> {
    */
   public async commit() {
     const models = this.collection.find().map((doc) => doc.toModel());
-    await this.subscribe(models);
+    await this.publish(models);
   }
 
   /**
@@ -186,8 +207,11 @@ export default class Controller<TVariable, TName extends string> {
    *
    * Subclasses typically use this inside `invalidate()`.
    */
-  protected refetch() {
-    return this.initialise();
+  public async update(where?: string | Partial<TVariable>) {
+    const [response, total] = await this.fetch(where);
+    this.collection.insertMany(response);
+    this.updateTotal(total);
+    await this.commit();
   }
 
   /**
@@ -213,10 +237,11 @@ export default class Controller<TVariable, TName extends string> {
     void this.storageManager.delete(this.name);
     this.collection.clear();
     this.updateTotal(0);
-    this.updatePageSize(-1);
+    this.updatePage(0);
+    this.updateLimit(10);
     this.error = null;
     this.loading = false;
-    void this.subscribe([]);
+    void this.publish([]);
   }
 
   /**
@@ -228,19 +253,16 @@ export default class Controller<TVariable, TName extends string> {
    */
   constructor(name: TName, {
     storageManager = new DefaultStorageManager<TVariable[]>("live-cache:"),
-    pageSize = -1,
+    pageSize = 10,
     invalidator = new DefaultInvalidator<TVariable>(),
-    initialiseOnMount = true,
   }: ControllerOptions<TVariable, TName>) {
     this.name = name;
     this.collection = new Collection(name);
     this.storageManager = storageManager;
-    this.pageSize = pageSize;
+    this.page = 0;
+    this.limit = pageSize;
     this.invalidator = invalidator;
     this.invalidator.bind(this.invalidate.bind(this));
-    if (initialiseOnMount) {
-      this.initialise();
-    }
   }
 }
 

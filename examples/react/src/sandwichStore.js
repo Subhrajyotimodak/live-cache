@@ -5,6 +5,10 @@ import {
   TimeoutInvalidator,
 } from "live-cache";
 import { PostsController, TodosController } from "./sandwichControllers";
+import {
+  PokemonDetailsController,
+  PokemonListController,
+} from "./pokemonControllers";
 
 // Important: module-level singleton so React StrictMode doesn't
 // accidentally create/register controllers twice.
@@ -26,7 +30,17 @@ const todos = new TodosController("todos", {
   storageManager: storage,
   initialiseOnMount: false,
 });
+const pokemonList = new PokemonListController("pokemonList", {
+  storageManager: storage,
+  initialiseOnMount: false,
+});
+const pokemonDetails = new PokemonDetailsController("pokemonDetails", {
+  storageManager: storage,
+  initialiseOnMount: false,
+});
 store.register(post);
 store.register(todos);
+store.register(pokemonList);
+store.register(pokemonDetails);
 
 export default store;

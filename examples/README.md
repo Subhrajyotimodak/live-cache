@@ -11,7 +11,7 @@ A simple HTML page demonstrating how to use the library with plain JavaScript.
 **Features:**
 
 - Uses the UMD build
-- Interactive form to create and update sandwiches
+- Interactive form to create and update data
 - Beautiful, modern UI
 - No build step required (just open in browser after building the library)
 
@@ -32,7 +32,7 @@ A modern React application using Vite as the build tool.
 
 - Uses the ES Module build
 - React hooks for state management
-- Interactive UI with animations
+- PokéAPI explorer (list + details)
 - TypeScript support
 - Hot module replacement in development
 
@@ -63,14 +63,10 @@ To use LiveCache in your own project:
 2. Import and use:
 
    ```javascript
-   import { createSandwich } from "live-cache";
+   import { Collection } from "live-cache";
 
-   const sandwich = createSandwich({
-     bread: "sourdough",
-     filling: "turkey",
-   });
-
-   console.log(sandwich.describe());
+   const users = new Collection("users");
+   users.insertOne({ name: "Ada Lovelace" });
    ```
 
 See the individual example READMEs for more details!

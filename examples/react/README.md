@@ -1,6 +1,7 @@
-# React Example
+# React Example (PokéAPI Explorer)
 
-This example demonstrates how to use LiveCache in a React application.
+This example demonstrates how to use LiveCache controllers in a React app by
+building a small PokéAPI explorer.
 
 ## How to Run
 
@@ -23,17 +24,15 @@ This example demonstrates how to use LiveCache in a React application.
 ## What It Does
 
 This example shows:
-- How to import and use the library in a React component
-- Managing library instances with React state and hooks
-- Creating interactive UI with the library's API
-- Using TypeScript types from the library
-- Building a modern React app with Vite
+- How to register controllers in an ObjectStore and wire them into React
+- How to subscribe to controllers with `useController`
+- Separating UI into components (search, list, details, stats)
+- Fetching remote data and persisting snapshots
 
 ## Features
 
-- Create new sandwiches with custom bread and filling
-- Update existing sandwich properties
-- Generate random sandwiches
-- Beautiful, responsive UI with smooth animations
-- Real-time updates using React state management
+- Search by Pokémon name or id
+- Browse a curated list of Pokémon
+- View artwork, quick facts, and base stats
+- Controller-driven updates with cached snapshots
 

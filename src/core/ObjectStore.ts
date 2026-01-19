@@ -62,12 +62,12 @@ export default class ObjectStore {
   /**
    * Initialise a controller once per store, even if multiple callers request it.
    */
-  initialiseOnce<TVariable, TName extends string>(name: TName) {
+  initialiseOnce<TVariable, TName extends string>(name: TName, where?: string | Partial<TVariable>) {
     const controller = this.get<TVariable, TName>(name);
     const existing = this.initialisePromises.get(controller);
     if (existing) return existing;
 
-    const promise = controller.initialise().finally(() => {
+    const promise = controller.initialise(where).finally(() => {
       if (this.initialisePromises.get(controller) === promise) {
         this.initialisePromises.delete(controller);
       }

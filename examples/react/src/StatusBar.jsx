@@ -1,7 +1,11 @@
 import { useController } from "live-cache";
 
-export default function StatusBar({ controllerName, mutating }) {
-  const active = useController(controllerName);
+export default function StatusBar({
+  controllerName,
+  mutating,
+  controllerOptions,
+}) {
+  const active = useController(controllerName, undefined, controllerOptions);
   return (
     <div
       style={{

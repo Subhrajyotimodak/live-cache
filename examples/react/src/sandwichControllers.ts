@@ -75,18 +75,21 @@ export class TodoDTO extends Document<{ title: string; completed: boolean; userI
 }
 
 export class PostsController extends Controller<Post, "posts"> {
+  public page = 0;
+  public limit = 10;
+
   compoundKeyToObjectId(data: Post) {
     // For compound keys, return Collection.hash({ ...fields }).
     return String(data.id);
   }
 
   async listPosts(): Promise<Post[]> {
-    const res = await fetch(`${API_BASE}/posts`);
+    const res = await fetch(`${API_BASE}/posts?page=${this.page}&limit=${this.limit}`);
     if (!res.ok) throw new Error(`GET /posts failed (${res.status})`);
     return (await res.json()) as Post[];
   }
 
-  async fetchAll(): Promise<[Post[], number]> {
+  async fetch(): Promise<[Post[], number]> {
     const data = await this.listPosts();
     return [data, data.length];
   }
@@ -212,6 +215,9 @@ export class PostsController extends Controller<Post, "posts"> {
 }
 
 export class TodosController extends Controller<Todo, "todos"> {
+  public page = 0;
+  public limit = 10;
+
   compoundKeyToObjectId(data: Todo) {
     return String(data.id);
   }
@@ -222,7 +228,7 @@ export class TodosController extends Controller<Todo, "todos"> {
   }
 
   async listTodos(): Promise<Todo[]> {
-    const res = await fetch(`${API_BASE}/todos`);
+    const res = await fetch(`${API_BASE}/todos?page=${this.page}&limit=${this.limit}`);
     if (!res.ok) throw new Error(`GET /todos failed (${res.status})`);
     return (await res.json()) as Todo[];
   }

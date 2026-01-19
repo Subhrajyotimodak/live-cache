@@ -1,10 +1,12 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import ObjectStore from "../core/ObjectStore";
 import { context } from "./Context";
 import { ModelType } from "../core/Document";
 import Controller from "../core/Controller";
 
 interface ControllerOptions {
+  page?: number;
+  limit?: number;
   store?: ObjectStore;
   initialise?: boolean;
   abortOnUnmount?: boolean;
@@ -74,16 +76,14 @@ export default function useController<TVariable, TName extends string>(
     // Prime state immediately.
     callback();
 
-    const cleanup = controller.publish(callback);
+    const cleanup = controller.subscribe(callback);
 
     if (withInvalidation) {
       controller.invalidator.registerInvalidation();
     }
 
-    if (initialise) {
-      void store.initialiseOnce<TVariable, TName>(name);
-    }
-
+    void store.initialiseOnce<TVariable, TName>(name, where);
+    // controller.initialise(where);
 
     return () => {
       if (abortOnUnmount) {
@@ -92,7 +92,8 @@ export default function useController<TVariable, TName extends string>(
       cleanup();
       controller.invalidator.unregisterInvalidation();
     };
-  }, [controller, where, initialise, abortOnUnmount, withInvalidation]);
+  }, [controller, where, abortOnUnmount, withInvalidation]);
+
 
   return { controller, data, loading, error };
 }
