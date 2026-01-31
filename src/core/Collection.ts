@@ -20,6 +20,7 @@ export default class Collection<TVariable, TName extends string> {
   private dataMap: Record<string, Document<TVariable>> = {};
   private indexes: Record<string, string[]> = {};
   private counter: number = 0;
+  public lastUpdated: Date = new Date();
 
   constructor(public name: TName) { }
 
@@ -30,6 +31,11 @@ export default class Collection<TVariable, TName extends string> {
     this.dataMap = {};
     this.indexes = {};
     this.counter = 0;
+    this.lastUpdated = new Date();
+  }
+
+  public updateLastUpdated() {
+    this.lastUpdated = new Date();
   }
 
   /**
@@ -61,6 +67,8 @@ export default class Collection<TVariable, TName extends string> {
     if (!this.indexes[fullIndexKey].includes(doc._id)) {
       this.indexes[fullIndexKey].push(doc._id);
     }
+
+    this.updateLastUpdated();
   }
 
   /**
@@ -96,6 +104,8 @@ export default class Collection<TVariable, TName extends string> {
         delete this.indexes[fullIndexKey];
       }
     }
+
+    this.updateLastUpdated();
   }
 
   /**
@@ -186,6 +196,8 @@ export default class Collection<TVariable, TName extends string> {
     // Add to indexes
     this.addToIndexes(doc);
 
+    this.updateLastUpdated();
+
     return doc;
   }
 
@@ -203,6 +215,8 @@ export default class Collection<TVariable, TName extends string> {
 
     // Remove from dataMap
     delete this.dataMap[doc._id];
+
+    this.updateLastUpdated();
 
     return true;
   }
@@ -233,6 +247,8 @@ export default class Collection<TVariable, TName extends string> {
     doc.updateData(update);
     this.addToIndexes(doc);
 
+    this.updateLastUpdated();
+
     return doc;
   }
 
@@ -253,6 +269,8 @@ export default class Collection<TVariable, TName extends string> {
 
       insertedDocs.push(doc);
     }
+
+    this.updateLastUpdated();
 
     return insertedDocs;
   }

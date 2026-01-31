@@ -1,6 +1,6 @@
 {
   "name": "live-cache",
-  "version": "0.2.3",
+  "version": "0.2.7",
   "description": "A client-side cache + controller library for stateful resources",
   "repository": {
     "type": "git",

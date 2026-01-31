@@ -3,18 +3,18 @@ import ObjectStore from "../core/ObjectStore";
 import { context } from "./Context";
 import { ModelType } from "../core/Document";
 import Controller from "../core/Controller";
+import Collection from "../core/Collection";
 
 interface ControllerOptions {
   page?: number;
   limit?: number;
   store?: ObjectStore;
-  initialise?: boolean;
-  abortOnUnmount?: boolean;
   withInvalidation?: boolean;
 }
 
-export interface UseControllerResult<TVariable, TName extends string> {
-  controller: Controller<TVariable, TName>;
+export interface UseControllerResult<TVariable, TName extends string, TController extends Controller<TVariable, TName>> {
+  controller: TController;
+  collection: Collection<TVariable, TName>;
   data: ModelType<TVariable>[];
   loading: boolean;
   error: unknown;
@@ -45,17 +45,17 @@ export interface UseControllerResult<TVariable, TName extends string> {
  * );
  * ```
  */
-export default function useController<TVariable, TName extends string>(
-  name: TName,
-  where?: string | Partial<TVariable>,
+type TVariable<TController extends Controller<any, any>> = TController extends Controller<infer U, infer V> ? U : never;
+type TName<TController extends Controller<any, any>> = TController extends Controller<infer U, infer V> ? V : never;
+export default function useController<TController extends Controller<any, any>>(
+  controllerInstance: TController,
+  where?: string | Partial<TVariable<TController>>,
   options?: ControllerOptions,
-): UseControllerResult<TVariable, TName> {
-  const initialise = options?.initialise ?? true;
+): UseControllerResult<TVariable<TController>, TName<TController>, TController> {
   const optionalStore = options?.store;
-  const abortOnUnmount = options?.abortOnUnmount ?? true;
   const withInvalidation = options?.withInvalidation ?? true;
 
-  const [data, setData] = useState<ModelType<TVariable>[]>([]);
+  const [data, setData] = useState<ModelType<TVariable<TController>>[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -65,7 +65,13 @@ export default function useController<TVariable, TName extends string>(
     throw Error("Store is not defined");
   }
 
-  const controller = useMemo(() => store.get<TVariable, TName>(name), [store, name]);
+  const controller = useMemo<TController>(() => {
+    if (!store.get(controllerInstance.name)) {
+      store.register(controllerInstance);
+    }
+    return store.get(controllerInstance.name) as TController;
+  }, [controllerInstance, store])
+
   useEffect(() => {
     const callback = () => {
       setLoading(controller.loading);
@@ -82,18 +88,15 @@ export default function useController<TVariable, TName extends string>(
       controller.invalidator.registerInvalidation();
     }
 
-    void store.initialiseOnce<TVariable, TName>(name, where);
-    // controller.initialise(where);
+    void store.initialiseOnce<TVariable<TController>, TName<TController>>(controller.name, where);
 
     return () => {
-      if (abortOnUnmount) {
-        controller.abort();
-      }
+      controller.abort();
       cleanup();
       controller.invalidator.unregisterInvalidation();
     };
-  }, [controller, where, abortOnUnmount, withInvalidation]);
+  }, [where, withInvalidation]);
 
 
-  return { controller, data, loading, error };
+  return { controller, collection: controller.collection, data, loading, error };
 }
