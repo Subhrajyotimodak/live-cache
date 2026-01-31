@@ -1,6 +1,6 @@
 {
   "name": "@live-cache/invalidator",
-  "version": "0.2.7",
+  "version": "0.0.1",
   "description": "Invalidator implementations for live-cache",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -37,7 +37,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@live-cache/core": "0.2.7"
+    "@live-cache/core": "0.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

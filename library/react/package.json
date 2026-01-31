@@ -1,6 +1,6 @@
 {
   "name": "@live-cache/react",
-  "version": "0.2.7",
+  "version": "0.0.1",
   "description": "React bindings for live-cache",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -40,7 +40,7 @@
     "react": ">=16.8"
   },
   "dependencies": {
-    "@live-cache/core": "0.2.7"
+    "@live-cache/core": "0.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

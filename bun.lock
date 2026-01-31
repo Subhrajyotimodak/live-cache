@@ -27,7 +27,7 @@
     },
     "library/core": {
       "name": "@live-cache/core",
-      "version": "0.2.7",
+      "version": "0.0.1",
       "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",
         "@rollup/plugin-node-resolve": "^15.2.3",
@@ -39,9 +39,9 @@
     },
     "library/invalidator": {
       "name": "@live-cache/invalidator",
-      "version": "0.2.7",
+      "version": "0.0.1",
       "dependencies": {
-        "@live-cache/core": "workspace:*",
+        "@live-cache/core": "0.0.1",
       },
       "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",
@@ -54,9 +54,9 @@
     },
     "library/react": {
       "name": "@live-cache/react",
-      "version": "0.2.7",
+      "version": "0.0.1",
       "dependencies": {
-        "@live-cache/core": "0.2.7",
+        "@live-cache/core": "0.0.1",
       },
       "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",
@@ -75,9 +75,9 @@
     },
     "library/storage-manager": {
       "name": "@live-cache/storage-manager",
-      "version": "0.2.7",
+      "version": "0.0.1",
       "dependencies": {
-        "@live-cache/core": "workspace:*",
+        "@live-cache/core": "0.0.1",
       },
       "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",

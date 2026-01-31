@@ -1,7 +1,7 @@
 {
   "name": "live-cache-workspace",
   "private": true,
-  "version": "0.2.7",
+  "version": "0.0.1",
   "description": "A client-side cache + controller library for stateful resources",
   "repository": {
     "type": "git",

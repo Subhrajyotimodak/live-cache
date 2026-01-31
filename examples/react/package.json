@@ -10,10 +10,10 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@live-cache/core": "workspace:*",
-    "@live-cache/invalidator": "workspace:*",
-    "@live-cache/react": "workspace:*",
-    "@live-cache/storage-manager": "workspace:*"
+    "@live-cache/core": "0.0.1",
+    "@live-cache/invalidator": "0.0.1",
+    "@live-cache/react": "0.0.1",
+    "@live-cache/storage-manager": "0.0.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
