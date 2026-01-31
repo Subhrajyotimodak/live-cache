@@ -1,36 +1,22 @@
 {
-  "name": "live-cache",
+  "name": "live-cache-workspace",
+  "private": true,
   "version": "0.2.7",
   "description": "A client-side cache + controller library for stateful resources",
   "repository": {
     "type": "git",
     "url": "https://github.com/Subhrajyotimodak/live-cache"
   },
-  "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "browser": "./dist/index.umd.js",
-      "default": "./dist/index.mjs"
-    }
-  },
-  "unpkg": "dist/index.umd.js",
-  "jsdelivr": "dist/index.umd.js",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
-    "build": "npm run clean && rollup -c",
-    "dev": "rollup -c -w",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "cd library/core && bun run build && cd ../invalidator && bun run build && cd ../storage-manager && bun run build && cd ../react && bun run build",
+    "publish:packages": "bun run build && npm --workspace library/core publish && npm --workspace library/invalidator publish && npm --workspace library/storage-manager publish && npm --workspace library/react publish",
+    "test": "bun test test/",
+    "test:ci": "bun run build && bun test test/"
   },
-  "sideEffects": false,
+  "workspaces": [
+    "library/*",
+    "examples/*"
+  ],
   "keywords": [
     "javascript",
     "typescript",
@@ -38,24 +24,10 @@
   ],
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-typescript": "^11.1.5",
-    "@types/object-hash": "^3.0.6",
-    "@types/react": "^18.2.0",
-    "react": "^18.2.0",
-    "rollup": "^4.9.0",
-    "tslib": "^2.6.2",
-    "typescript": "^5.3.3"
-  },
-  "peerDependencies": {
-    "react": ">=16.8"
-  },
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "object-hash": "^3.0.0"
+  "devDependencies": {
+    "bun-types": "latest"
   }
 }

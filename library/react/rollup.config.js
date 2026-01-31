@@ -1,23 +1,24 @@
-const typescriptMod = require("@rollup/plugin-typescript");
 const resolveMod = require("@rollup/plugin-node-resolve");
 const commonjsMod = require("@rollup/plugin-commonjs");
+const sucraseMod = require("@rollup/plugin-sucrase");
 
-const typescript = typescriptMod.default ?? typescriptMod;
 const nodeResolve = resolveMod.nodeResolve ?? resolveMod.default ?? resolveMod;
 const commonjs = commonjsMod.default ?? commonjsMod;
+const sucrase = sucraseMod.default ?? sucraseMod;
 
 module.exports = {
   input: "src/index.ts",
-  external: ["react"],
+  external: ["react", "@live-cache/core"],
   output: [
     {
       file: "dist/index.umd.js",
       format: "umd",
-      name: "LiveCache",
+      name: "LiveCacheReact",
       exports: "named",
       sourcemap: true,
       globals: {
         react: "React",
+        "@live-cache/core": "LiveCacheCore",
       },
     },
     {
@@ -33,10 +34,12 @@ module.exports = {
     },
   ],
   plugins: [
-    nodeResolve(),
+    nodeResolve({
+      extensions: [".mjs", ".js", ".json", ".node", ".ts", ".tsx"],
+    }),
     commonjs(),
-    typescript({
-      tsconfig: "./tsconfig.json",
+    sucrase({
+      transforms: ["typescript", "jsx"],
     }),
   ],
 };

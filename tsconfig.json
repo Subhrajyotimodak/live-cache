@@ -13,8 +13,20 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "baseUrl": ".",
+    "types": ["bun-types"],
+    "paths": {
+      "@live-cache/core": ["library/core/src/index.ts"],
+      "@live-cache/core/*": ["library/core/src/*"],
+      "@live-cache/react": ["library/react/src"],
+      "@live-cache/react/*": ["library/react/src/*"],
+      "@live-cache/storage-manager": ["library/storage-manager/src"],
+      "@live-cache/storage-manager/*": ["library/storage-manager/src/*"],
+      "@live-cache/invalidator": ["library/invalidator/src"],
+      "@live-cache/invalidator/*": ["library/invalidator/src/*"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["library/*/src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist", "examples"]
 }

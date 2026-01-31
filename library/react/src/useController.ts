@@ -1,9 +1,6 @@
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import ObjectStore from "../core/ObjectStore";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { Collection, Controller, ModelType, ObjectStore } from "@live-cache/core";
 import { context } from "./Context";
-import { ModelType } from "../core/Document";
-import Controller from "../core/Controller";
-import Collection from "../core/Collection";
 
 interface ControllerOptions {
   page?: number;

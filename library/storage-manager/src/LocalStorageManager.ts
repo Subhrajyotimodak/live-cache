@@ -1,4 +1,4 @@
-import { StorageManager } from "../core/StorageManager";
+import { StorageManager } from "@live-cache/core";
 
 /**
  * `localStorage`-backed `StorageManager`.

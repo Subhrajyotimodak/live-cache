@@ -41,7 +41,6 @@ class TransactionsInstance<TVariable, TName extends string> {
 
 
 
-
 }
 
 

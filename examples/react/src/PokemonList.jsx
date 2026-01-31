@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useController } from "live-cache";
+import { useController } from "@live-cache/react";
 
 export default function PokemonList({ selectedName, onSelect }) {
   const { data, loading, error } = useController("pokemonList");

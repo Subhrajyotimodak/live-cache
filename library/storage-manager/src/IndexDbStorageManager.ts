@@ -1,4 +1,4 @@
-import { StorageManager } from "../core/StorageManager";
+import { StorageManager } from "@live-cache/core";
 
 type Key = string;
 
@@ -289,4 +289,3 @@ export default class IndexDbStorageManager extends StorageManager<any> {
         }
     }
 }
-

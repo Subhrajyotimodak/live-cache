@@ -1,4 +1,4 @@
-import { Invalidator } from "../core/Invalidator";
+import { Invalidator } from "@live-cache/core";
 
 export interface WebsocketInvalidatorOptions<TVariable> {
     protocols?: string | string[];

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Controller from '../core/Controller';
-import join from '../core/join';
+import { Controller, join } from "@live-cache/core";
 
 
 type Args = Parameters<typeof join>;

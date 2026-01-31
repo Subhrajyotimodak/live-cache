@@ -1,9 +1,6 @@
-import {
-  createObjectStore,
-  LocalStorageStorageManager,
-  Transactions,
-  TimeoutInvalidator,
-} from "live-cache";
+import { createObjectStore, Transactions } from "@live-cache/core";
+import { LocalStorageStorageManager } from "@live-cache/storage-manager";
+import { TimeoutInvalidator } from "@live-cache/invalidator";
 import { PostsController, TodosController } from "./sandwichControllers";
 import {
   PokemonDetailsController,

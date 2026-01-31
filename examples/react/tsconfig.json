@@ -12,8 +12,10 @@
     "useDefineForClassFields": false,
     "baseUrl": ".",
     "paths": {
-      "live-cache": ["../../src/index.ts"],
-      "live-cache/*": ["../../src/*"]
+      "@live-cache/core": ["../../library/core/src/index.ts"],
+      "@live-cache/react": ["../../library/react/src/index.ts"],
+      "@live-cache/storage-manager": ["../../library/storage-manager/src/index.ts"],
+      "@live-cache/invalidator": ["../../library/invalidator/src/index.ts"]
     }
   },
   "include": ["src"]

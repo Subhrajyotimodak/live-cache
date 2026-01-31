@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ContextProvider } from "live-cache";
+import { ContextProvider } from "@live-cache/react";
 import App from "./App";
 import store from "./sandwichStore";
 import "./index.css";

@@ -1,4 +1,4 @@
-import { Controller, Document, Transactions } from "live-cache";
+import { Controller, Document, Transactions } from "@live-cache/core";
 
 const API_BASE = "https://jsonplaceholder.typicode.com";
 const JSON_HEADERS = { "Content-Type": "application/json; charset=UTF-8" };

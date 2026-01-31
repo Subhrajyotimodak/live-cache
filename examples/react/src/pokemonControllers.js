@@ -1,4 +1,4 @@
-import { Controller } from "live-cache";
+import { Controller } from "@live-cache/core";
 
 const API_BASE = "https://pokeapi.co/api/v2";
 

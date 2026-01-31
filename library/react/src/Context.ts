@@ -1,6 +1,5 @@
 import React, { createContext, ReactNode, useMemo } from "react";
-import { getDefaultObjectStore } from "../core/ObjectStore";
-import Controller from "../core/Controller";
+import { getDefaultObjectStore, Controller } from "@live-cache/core";
 
 interface Props {
   store?: ReturnType<typeof getDefaultObjectStore>;
@@ -27,7 +26,7 @@ export default function ContextProvider({
   children,
   store = getDefaultObjectStore(),
 }: Props) {
-  return <context.Provider value={store}>{children}</context.Provider>;
+  return React.createElement(context.Provider, { value: store }, children);
 }
 
 /**

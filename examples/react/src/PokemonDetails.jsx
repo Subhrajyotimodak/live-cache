@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useController } from "live-cache";
+import { useController } from "@live-cache/react";
 import { formatName, getSpriteUrl, getWhereFromQuery } from "./pokemonUtils";
 
 export default function PokemonDetails({ query }) {

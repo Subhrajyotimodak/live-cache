@@ -1,4 +1,4 @@
-import { useController } from "live-cache";
+import { useController } from "@live-cache/react";
 
 export default function PokemonSearchBar({ search, setSearch, onSubmit }) {
   const { loading, error } = useController("pokemonDetails", undefined, {
