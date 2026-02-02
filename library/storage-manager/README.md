@@ -2,6 +2,8 @@
 
 StorageManager implementations for live-cache.
 
+> **Disclaimer:** This project is under initial development. Breaking changes are made every week.
+
 ## Install
 
 ```bash

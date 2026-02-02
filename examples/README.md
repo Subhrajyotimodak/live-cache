@@ -2,6 +2,8 @@
 
 This folder contains example implementations of the LiveCache library.
 
+> **Disclaimer:** This project is under initial development. Breaking changes are made every week.
+
 ## Available Examples
 
 ### 1. Vanilla JavaScript (`vanilla-js/`)

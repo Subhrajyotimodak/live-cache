@@ -9,6 +9,7 @@ import ObjectStore, {
 import Transactions from "./Transactions";
 import { DefaultStorageManager, StorageManager } from "./StorageManager";
 import { DefaultInvalidator, Invalidator } from "./Invalidator";
+import { withMutation, type WithMutationState } from "./decorator";
 
 export {
   Collection,
@@ -23,7 +24,9 @@ export {
   DefaultStorageManager,
   DefaultInvalidator,
   Invalidator,
+  withMutation,
 };
+export type { WithMutationState };
 
 export default {
   Collection,
@@ -38,6 +41,7 @@ export default {
   DefaultStorageManager,
   DefaultInvalidator,
   Invalidator,
+  withMutation,
 };
 
 export type { ModelType } from "./Document";

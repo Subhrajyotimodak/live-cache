@@ -92,7 +92,7 @@ export default class Controller<TVariable, TName extends string> {
    * Subclasses must implement this. Return `[rows, total]` where `total` is the
    * total number of rows available on the backend (useful for pagination).
    */
-  public async fetch(where?: string | Partial<TVariable>): Promise<[TVariable[], number]> {
+  public async fetch(where?: string | Partial<TVariable>): Promise<TVariable | [TVariable[], number]> {
     throw Error("Not Implemented");
   }
 
@@ -143,9 +143,15 @@ export default class Controller<TVariable, TName extends string> {
     // If the storage manager is empty, fetch the data from the server.
     try {
       this.loading = true;
-      const [_data, total] = await this.fetch(where);
-      this.collection.insertMany(_data);
-      this.updateTotal(total);
+      const data = await this.fetch(where);
+      if (Array.isArray(data)) {
+        const [_data, total] = data;
+        this.collection.insertMany(_data);
+        this.updateTotal(total);
+      } else {
+        this.collection.insertOne(data);
+        this.updateTotal(1);
+      }
     } catch (error) {
       this.error = error;
     }
@@ -208,9 +214,15 @@ export default class Controller<TVariable, TName extends string> {
    * Subclasses typically use this inside `invalidate()`.
    */
   public async update(where?: string | Partial<TVariable>) {
-    const [response, total] = await this.fetch(where);
-    this.collection.insertMany(response);
-    this.updateTotal(total);
+    const data = await this.fetch(where);
+    if (Array.isArray(data)) {
+      const [response, total] = data;
+      this.collection.insertMany(response);
+      this.updateTotal(total);
+    } else {
+      this.collection.insertOne(data);
+      this.updateTotal(1);
+    }
     await this.commit();
   }
 
@@ -251,11 +263,8 @@ export default class Controller<TVariable, TName extends string> {
    * @param storageManager - where snapshots are persisted (defaults to no-op)
    * @param pageSize - optional pagination hint (userland)
    */
-  constructor(name: TName, {
-    storageManager = new DefaultStorageManager<TVariable[]>("live-cache:"),
-    pageSize = 10,
-    invalidator = new DefaultInvalidator<TVariable>(),
-  }: ControllerOptions<TVariable, TName>) {
+  constructor(name: TName, options?: ControllerOptions<TVariable, TName>) {
+    const { storageManager = new DefaultStorageManager<TVariable[]>("live-cache:"), pageSize = 10, invalidator = new DefaultInvalidator<TVariable>() } = options ?? {};
     this.name = name;
     this.collection = new Collection(name);
     this.storageManager = storageManager;

@@ -2,13 +2,6 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Collection, Controller, ModelType, ObjectStore } from "@live-cache/core";
 import { context } from "./Context";
 
-interface ControllerOptions {
-  page?: number;
-  limit?: number;
-  store?: ObjectStore;
-  withInvalidation?: boolean;
-}
-
 export interface UseControllerResult<TVariable, TName extends string, TController extends Controller<TVariable, TName>> {
   controller: TController;
   collection: Collection<TVariable, TName>;
@@ -16,6 +9,14 @@ export interface UseControllerResult<TVariable, TName extends string, TControlle
   loading: boolean;
   error: unknown;
 }
+
+interface ControllerOptions {
+  page?: number;
+  limit?: number;
+  store?: ObjectStore;
+  withInvalidation?: boolean;
+}
+
 
 /**
  * React hook to subscribe to a registered controller.
@@ -45,7 +46,7 @@ export interface UseControllerResult<TVariable, TName extends string, TControlle
 type TVariable<TController extends Controller<any, any>> = TController extends Controller<infer U, infer V> ? U : never;
 type TName<TController extends Controller<any, any>> = TController extends Controller<infer U, infer V> ? V : never;
 export default function useController<TController extends Controller<any, any>>(
-  controllerInstance: TController,
+  name: TName<TController>,
   where?: string | Partial<TVariable<TController>>,
   options?: ControllerOptions,
 ): UseControllerResult<TVariable<TController>, TName<TController>, TController> {
@@ -63,11 +64,12 @@ export default function useController<TController extends Controller<any, any>>(
   }
 
   const controller = useMemo<TController>(() => {
-    if (!store.get(controllerInstance.name)) {
-      store.register(controllerInstance);
+    if (!store.get(name)) {
+      throw Error(`Controller with name ${name} is not registered`);
+
     }
-    return store.get(controllerInstance.name) as TController;
-  }, [controllerInstance, store])
+    return store.get(name) as TController;
+  }, [name, store])
 
   useEffect(() => {
     const callback = () => {

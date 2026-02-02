@@ -1,13 +1,14 @@
 {
   "name": "live-cache-workspace",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A client-side cache + controller library for stateful resources",
   "repository": {
     "type": "git",
     "url": "https://github.com/Subhrajyotimodak/live-cache"
   },
   "scripts": {
+    "version:set": "bun run scripts/set-version.ts",
     "build": "cd library/core && bun run build && cd ../invalidator && bun run build && cd ../storage-manager && bun run build && cd ../react && bun run build",
     "publish:packages": "bun run build && npm --workspace library/core publish && npm --workspace library/invalidator publish && npm --workspace library/storage-manager publish && npm --workspace library/react publish",
     "test": "bun test test/",

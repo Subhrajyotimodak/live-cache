@@ -2,6 +2,8 @@
 
 A lightweight, type-safe client-side database library for JavaScript written in TypeScript. Store and query data collections directly in the browser with MongoDB-like syntax.
 
+> **Disclaimer:** This project is under initial development. Breaking changes are made every week.
+
 ## Features
 
 - 📦 Written in TypeScript with full type definitions
@@ -17,6 +19,7 @@ A lightweight, type-safe client-side database library for JavaScript written in 
 ## Examples
 
 See the `examples/` folder for ready-to-run demos:
+
 - `examples/react`: PokéAPI explorer built with controllers + `useController`
 - `examples/vanilla-js`: Simple browser demo using the UMD build
 
@@ -191,7 +194,10 @@ import { Controller } from "live-cache";
 const API_BASE = "https://pokeapi.co/api/v2";
 
 // Controller for fetching the list of Pokémon
-class PokemonListController extends Controller<{ name: string; url: string }, "pokemonList"> {
+class PokemonListController extends Controller<
+  { name: string; url: string },
+  "pokemonList"
+> {
   constructor(name, options) {
     super(name, options);
     this.limit = 24;
@@ -202,7 +208,8 @@ class PokemonListController extends Controller<{ name: string; url: string }, "p
     const response = await fetch(`${API_BASE}/pokemon?limit=${this.limit}`, {
       signal: this.abortController?.signal,
     });
-    if (!response.ok) throw new Error(`GET /pokemon failed (${response.status})`);
+    if (!response.ok)
+      throw new Error(`GET /pokemon failed (${response.status})`);
     const data = await response.json();
     return [data.results ?? [], data.count ?? 0];
   }
@@ -231,7 +238,8 @@ class PokemonDetailsController extends Controller<any, "pokemonDetails"> {
     const response = await fetch(`${API_BASE}/pokemon/${query}`, {
       signal: this.abortController?.signal,
     });
-    if (!response.ok) throw new Error(`GET /pokemon/${query} failed (${response.status})`);
+    if (!response.ok)
+      throw new Error(`GET /pokemon/${query} failed (${response.status})`);
     const data = await response.json();
     return [[data], 1];
   }
@@ -261,7 +269,11 @@ const users = new UsersController("users", {
 Transactions store collection snapshots so you can rollback failed mutations.
 
 ```ts
-import { Controller, Transactions, LocalStorageStorageManager } from "live-cache";
+import {
+  Controller,
+  Transactions,
+  LocalStorageStorageManager,
+} from "live-cache";
 
 // Do this once at app startup.
 Transactions.createInstance(new LocalStorageStorageManager("my-app:tx:"));
@@ -345,11 +357,9 @@ function PokemonDetails({ query }) {
   // Convert query string to where clause
   const where = useMemo(() => ({ name: query }), [query]);
 
-  const { data, loading, error } = useController(
-    "pokemonDetails",
-    where,
-    { initialise: !!where }
-  );
+  const { data, loading, error } = useController("pokemonDetails", where, {
+    initialise: !!where,
+  });
 
   const pokemon = data[0];
   if (loading) return <div>Loading Pokémon…</div>;
@@ -372,6 +382,7 @@ See `examples/react` for a complete PokéAPI explorer implementation with multip
 These show **framework-agnostic** controller patterns and a **React** wiring example for each.
 
 ### TODO: More invalidation strategies
+
 - [ ] Manual trigger
 - [ ] SWR on demand
 - [ ] Polling with backoff

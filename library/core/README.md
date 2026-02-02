@@ -2,6 +2,8 @@
 
 Core data structures and controller APIs for live-cache.
 
+> **Disclaimer:** This project is under initial development. Breaking changes are made every week.
+
 ## Install
 
 ```bash
@@ -15,9 +17,11 @@ bun add @live-cache/core
 - `join()` helper
 - `StorageManager` and `Invalidator` base types
 - `Transactions` utilities
+- `withMutation` – method decorator for Controller async methods; adds `.loading` and `.error` on the method (TC39 decorator)
+- `WithMutationState` – type for the decorated method shape
 
 ## Usage
 
 ```ts
-import { Controller, createObjectStore } from "@live-cache/core";
+import { Controller, createObjectStore, withMutation } from "@live-cache/core";
 ```

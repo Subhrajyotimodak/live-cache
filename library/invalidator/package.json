@@ -1,6 +1,6 @@
 {
   "name": "@live-cache/invalidator",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Invalidator implementations for live-cache",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -33,11 +33,19 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Subhrajyotimodak/live-cache.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Subhrajyotimodak/live-cache/issues"
+  },
+  "homepage": "https://github.com/Subhrajyotimodak/live-cache/library/invalidator#readme",
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@live-cache/core": "0.0.1"
+    "@live-cache/core": "0.0.2"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

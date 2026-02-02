@@ -2,9 +2,12 @@
 
 This example demonstrates how to use LiveCache in a plain HTML/JavaScript environment.
 
+> **Disclaimer:** This project is under initial development. Breaking changes are made every week.
+
 ## How to Run
 
 1. First, build the library from the root directory:
+
    ```bash
    npm install
    npm run build
@@ -17,6 +20,7 @@ This example demonstrates how to use LiveCache in a plain HTML/JavaScript enviro
 ## What It Does
 
 This example shows:
+
 - How to load the library using the UMD build
 - Creating sandwich instances
 - Calling library methods
@@ -24,4 +28,3 @@ This example shows:
 - Using the library's API in a vanilla JS context
 
 The library is available as a global `LiveCache` object when loaded via the UMD build.
-
